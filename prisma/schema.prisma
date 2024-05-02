@@ -1,0 +1,157 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+enum Mode {
+  USER
+  ADMIN
+}
+
+enum Gender {
+  MALE
+  FEMALE
+}
+
+enum Type {
+  VOCABULARY
+  EXPRESSIONS
+}
+
+enum PartOfSpeech {
+  VERB
+  NOUN
+  PRONOUN
+  ADJECTIVE
+  ADVERB
+  INTERJECTION
+  PREPOSION
+  CONJUNCTION
+}
+
+enum Status {
+  PUBLIC
+  SEMI_PRIVATE
+  PRIVATE
+}
+
+enum TrainingType {
+  QUIZ
+  FLASHCARDS
+}
+
+type File {
+  url String  @db.String
+  key String?
+}
+
+model User {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+
+  username String
+
+  email String @unique
+  hash  String
+
+  avatar File?
+
+  gender         Gender?
+  nativeLanguage String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  passwordResetLink PasswordResetLink[]
+  trainingSessions  TrainingSession[]
+  bookmarks         Bookmarks[]
+}
+
+model PasswordResetLink {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+
+  code String @unique @db.String
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String @db.ObjectId
+
+  createdAt DateTime @default(now()) 
+}
+
+model Bookmarks {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+
+  user   User   @relation(fields: [userId], references: [id])
+  userId String @db.ObjectId
+}
+
+model Pack {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+
+  sets Set[]
+
+  mode   Mode   @default(USER)
+  status Status @default(PRIVATE)
+  type   Type
+}
+
+model Set {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+
+  pack   Pack?   @relation(fields: [packId], references: [id])
+  packId String? @db.ObjectId
+
+  lists WordList[]
+  mode  Mode       @default(USER)
+
+  status      Status @default(PRIVATE)
+  image       File
+  name        String
+  description String @db.String
+  type        Type
+}
+
+model WordList {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+
+  words            Word[]
+  trainingSessions TrainingSession[]
+
+  set   Set    @relation(fields: [setId], references: [id])
+  setId String @db.ObjectId
+
+  mode        Mode   @default(USER)
+  status      Status @default(PRIVATE)
+  type        Type
+  name        String
+  description String @db.String
+}
+
+model Word {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+
+  list   WordList @relation(fields: [listId], references: [id], onDelete: Cascade)
+  listId String   @db.ObjectId
+
+  name          String
+  meaning       String
+  transcription String
+  partOfSpeech  PartOfSpeech
+
+  examples String[]
+}
+
+model TrainingSession {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String @db.ObjectId
+
+  list   WordList @relation(fields: [listId], references: [id])
+  listId String   @db.ObjectId
+
+  type TrainingType
+}
