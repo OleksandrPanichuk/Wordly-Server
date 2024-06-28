@@ -2,8 +2,9 @@ import { Redis } from '@app/helpers'
 import { ConfigService } from '@nestjs/config'
 import RedisStore from 'connect-redis'
 import { SessionOptions } from 'express-session'
+import { SESSION_NAME } from '@/constants'
 
-export const SESSION_NAME = 'app:session'
+
 
 export function getSessionConfig(config: ConfigService): SessionOptions {
 	const redis = Redis.getInstance(config)

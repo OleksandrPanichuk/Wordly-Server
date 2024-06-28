@@ -50,6 +50,12 @@
       ],
       "@app/mailer/*": [
         "libs/mailer/src/*"
+      ],
+      "@app/storage": [
+        "libs/storage/src"
+      ],
+      "@app/storage/*": [
+        "libs/storage/src/*"
       ]
     }
   }

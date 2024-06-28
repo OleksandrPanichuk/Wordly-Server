@@ -3,12 +3,11 @@ import { ValidationPipe } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import { NestFactory } from '@nestjs/core'
 import * as CookieParser from 'cookie-parser'
+
 import * as session from 'express-session'
 import helmet from 'helmet'
 import * as passport from 'passport'
 import { AppModule } from './app.module'
-
-
 
 async function bootstrap() {
 	const app = await NestFactory.create(AppModule)
@@ -21,9 +20,8 @@ async function bootstrap() {
 
 	app.enableCors({
 		credentials: true,
-		origin: [
-			config.get<string>('CLIENT_URL')
-		]
+		origin: [config.get<string>('CLIENT_URL')],
+		allowedHeaders: ['X-Xsrf-Token']
 	})
 
 	app.setGlobalPrefix('api')
