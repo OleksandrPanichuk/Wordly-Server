@@ -1,10 +1,10 @@
-import { DICTIONARY_API_URL } from '@/constants'
 import { PrismaService } from '@app/prisma'
 import { HttpService } from '@nestjs/axios'
 import { Injectable, NotFoundException } from '@nestjs/common'
 import { PartOfSpeech } from '@prisma/client'
 import { firstValueFrom } from 'rxjs'
 import { v4 as uuid } from 'uuid'
+import { DICTIONARY_API_URL } from '../constants'
 import { GetWordByNameInput, GetWordByNameResponse } from './dictionary.dto'
 import {
 	TypeDictionaryNotFound,
@@ -72,6 +72,10 @@ export class DictionaryService {
 	}: GetWordByNameInput): Promise<GetWordByNameResponse> {
 		if (mode === 'DICTIONARY') {
 			const wordFromDictionary = await this.fetchWordFromDictionary(word)
+
+			if (!wordFromDictionary) {
+				throw new NotFoundException('Word not found')
+			}
 
 			if (!('title' in wordFromDictionary)) {
 				const { partsOfSpeech, examples, meanings } =
@@ -213,8 +217,9 @@ export class DictionaryService {
 						}
 					]
 				}
+				
 				if (item.example) {
-					examples.concat(extractedExamples)
+					examples.push(...extractedExamples)
 				}
 			}
 		}
@@ -232,8 +237,10 @@ export class DictionaryService {
 
 		const sentences = this.extractSentences(example)
 
-		sentences.forEach((sentence) => {
+		for (const sentence of sentences) {
 			const words = this.splitSentence(sentence)
+
+			if (words.length < 5) continue
 
 			for (const el of words) {
 				const isSearchedWord = regex.test(el)
@@ -243,7 +250,7 @@ export class DictionaryService {
 					break
 				}
 			}
-		})
+		}
 
 		return result
 	}
@@ -253,7 +260,7 @@ export class DictionaryService {
 		const sentences = text.match(sentencePattern)
 		return sentences ? sentences.map((sentence) => sentence.trim()) : []
 	}
-	private splitSentence(sentence: string): (string)[] {
+	private splitSentence(sentence: string): string[] {
 		const wordPattern = /[\w\u0400-\u04FF]+|[.,!?]/g
 		const words = sentence.match(wordPattern)
 		return words ? words : []

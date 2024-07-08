@@ -56,7 +56,9 @@
       ],
       "@app/storage/*": [
         "libs/storage/src/*"
-      ]
+      ],
+      "@config/*": ["./config/*"],
+      "@config": ["./config"]
     }
   }
 }

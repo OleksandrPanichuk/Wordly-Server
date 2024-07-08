@@ -16,6 +16,7 @@ import { DictionaryService } from './dictionary.service'
 export class DictionaryController {
 	constructor(private readonly dictionaryService: DictionaryService) {}
 
+
 	@Get('')
 	@HttpCode(HttpStatus.OK)
 	searchWords(@Query('q') searchQuery: string) {

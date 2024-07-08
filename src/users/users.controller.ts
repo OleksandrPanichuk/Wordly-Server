@@ -1,6 +1,7 @@
+import { CurrentUser } from '@app/decorators'
 import { AuthenticatedGuard } from '@app/guards'
-import { Controller, Get, Req, UseGuards } from '@nestjs/common'
-import { Request } from 'express'
+import { Controller, Get, UseGuards } from '@nestjs/common'
+import { User } from '@prisma/client'
 import { UsersService } from './users.service'
 
 @Controller('users')
@@ -9,8 +10,7 @@ export class UsersController {
 
 	@Get('current')
 	@UseGuards(AuthenticatedGuard)
-	currentUser(@Req() req: Request) {
-		
-		return req.user
+	currentUser(@CurrentUser() user: User) {
+		return user
 	}
 }

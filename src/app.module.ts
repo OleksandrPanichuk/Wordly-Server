@@ -6,6 +6,7 @@ import { ConfigModule } from '@nestjs/config'
 import * as redisStore from 'cache-manager-redis-store'
 import { AuthModule } from './auth/auth.module'
 import { DictionaryModule } from './dictionary/dictionary.module'
+import { SubscriptionModule } from './subscription/subscription.module'
 import { UsersModule } from './users/users.module'
 
 @Module({
@@ -17,12 +18,13 @@ import { UsersModule } from './users/users.module'
 		CacheModule.register({
 			isGlobal: true,
 			store: redisStore,
-			ttl: 1800,
+			ttl: 7200,
 			url: process.env.REDIS_URL
 		}),
 		UsersModule,
 		PrismaModule,
-		DictionaryModule
+		DictionaryModule,
+		SubscriptionModule
 	]
 })
 export class AppModule {}

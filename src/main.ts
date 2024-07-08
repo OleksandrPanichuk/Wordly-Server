@@ -1,16 +1,22 @@
-import { getSessionConfig } from '@/config'
+
 import { ValidationPipe } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import { NestFactory } from '@nestjs/core'
 import * as CookieParser from 'cookie-parser'
+
+
 
 import * as session from 'express-session'
 import helmet from 'helmet'
 import * as passport from 'passport'
 import { AppModule } from './app.module'
 
+import {getSessionConfig} from '@config'
+
 async function bootstrap() {
-	const app = await NestFactory.create(AppModule)
+	const app = await NestFactory.create(AppModule, {
+		rawBody:true
+	})
 
 	const config = app.get(ConfigService)
 

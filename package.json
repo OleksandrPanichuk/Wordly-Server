@@ -21,6 +21,7 @@
     "prisma:push": "npx prisma db push && bun script.ts"
   },
   "dependencies": {
+    "@lemonsqueezy/lemonsqueezy.js": "^3.2.0",
     "@nestjs/axios": "^3.0.2",
     "@nestjs/cache-manager": "^2.2.2",
     "@nestjs/common": "^10.0.0",
@@ -30,7 +31,7 @@
     "@nestjs/passport": "^10.0.3",
     "@nestjs/platform-express": "^10.0.0",
     "@prisma/client": "^5.11.0",
-    "axios": "^1.6.8",
+    "axios": "^1.7.2",
     "bcrypt": "^5.1.1",
     "cache-manager": "^5.5.2",
     "cache-manager-redis-store": "^2.0.0",
@@ -39,6 +40,7 @@
     "cloudinary": "^2.2.0",
     "connect-redis": "^7.1.1",
     "cookie-parser": "^1.4.6",
+    "crypto": "^1.0.1",
     "express-session": "^1.18.0",
     "handlebars": "^4.7.8",
     "helmet": "^7.1.0",

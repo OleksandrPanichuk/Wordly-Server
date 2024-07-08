@@ -44,6 +44,12 @@ enum TrainingType {
   FLASHCARDS
 }
 
+enum BillingReason {
+  initial
+  renewal
+  updated
+}
+
 type File {
   url String  @db.String
   key String?
@@ -68,6 +74,9 @@ model User {
   passwordResetLink PasswordResetLink[]
   trainingSessions  TrainingSession[]
   bookmarks         Bookmarks[]
+
+  billingInfo  BillingInfo?
+  subscription Subscriptions?
 }
 
 model PasswordResetLink {
@@ -81,12 +90,66 @@ model PasswordResetLink {
   createdAt DateTime @default(now())
 }
 
+// Billing 
+
+model BillingInfo {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+
+  firstName String
+  lastName  String
+
+  country     String
+  city        String
+  address     String
+  phoneNumber Int
+  postalCode  String
+
+  user   User   @relation(fields: [userId], references: [id])
+  userId String @unique @db.ObjectId
+}
+
+model Subscriptions {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+
+  lsSubscriptionId String @unique
+  productId        Int
+
+  endsAt    DateTime?
+  createdAt DateTime @default(now())
+
+  userId String @unique @db.ObjectId
+  user   User   @relation(fields: [userId], references: [id])
+
+  isUnlimite Boolean @default(false)
+
+  payments Payments[]
+}
+
+model Payments {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+
+  subscription   Subscriptions? @relation(fields: [subscriptionId], references: [id])
+  subscriptionId String?        @db.ObjectId
+
+
+  billingReason BillingReason
+
+  subtotal Int
+  tax      Int
+  total    Int
+
+  createdAt DateTime @default(now())
+}
+
+// Bookmarks
 model Bookmarks {
   id String @id @default(auto()) @map("_id") @db.ObjectId
 
   user   User   @relation(fields: [userId], references: [id])
   userId String @db.ObjectId
 }
+
+// Vocabulary section & Dictionary
 
 model Pack {
   id String @id @default(auto()) @map("_id") @db.ObjectId
@@ -188,6 +251,8 @@ model Meanings {
   wordId String       @db.ObjectId
   lists  WordToList[] // Списки в яких використовується це визначення
 }
+
+// Training
 
 model TrainingSession {
   id String @id @default(auto()) @map("_id") @db.ObjectId
