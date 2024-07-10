@@ -19,7 +19,20 @@ export class SubscribedGuard implements CanActivate {
 				userId: user.id
 			}
 		})
+		
+		if (!subscription) {
+			return false
+		}
 
-		return !!subscription.lsSubscriptionId
+		if (Date.now() > subscription.endsAt.getTime()) {
+			await this.prisma.subscriptions.delete({
+				where: {
+					id: subscription.id
+				}
+			})
+			return false
+		}
+
+		return true
 	}
 }
