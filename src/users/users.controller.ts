@@ -1,5 +1,4 @@
-import { CurrentUser } from '@app/decorators'
-import { AuthenticatedGuard } from '@app/guards'
+import { AuthenticatedGuard, CurrentUser } from '@/common'
 import { Controller, Get, UseGuards } from '@nestjs/common'
 import { User } from '@prisma/client'
 import { UsersService } from './users.service'

@@ -21,29 +21,11 @@
       "@/*": [
         "./src/*"
       ],
-      "@app/helpers": [
-        "libs/helpers/src"
-      ],
-      "@app/helpers/*": [
-        "libs/helpers/src/*"
-      ],
       "@app/prisma": [
         "libs/prisma/src"
       ],
       "@app/prisma/*": [
         "libs/prisma/src/*"
-      ],
-      "@app/guards": [
-        "libs/guards/src"
-      ],
-      "@app/guards/*": [
-        "libs/guards/src/*"
-      ],
-      "@app/decorators": [
-        "libs/decorators/src"
-      ],
-      "@app/decorators/*": [
-        "libs/decorators/src/*"
       ],
       "@app/mailer": [
         "libs/mailer/src"

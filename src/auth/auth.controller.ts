@@ -1,4 +1,4 @@
-import { AuthenticatedGuard } from '@app/guards'
+import { AuthenticatedGuard } from '@/common'
 import {
 	Body,
 	Controller,

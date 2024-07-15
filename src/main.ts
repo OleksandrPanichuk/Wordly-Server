@@ -1,21 +1,18 @@
-
 import { ValidationPipe } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import { NestFactory } from '@nestjs/core'
 import * as CookieParser from 'cookie-parser'
-
-
 
 import * as session from 'express-session'
 import helmet from 'helmet'
 import * as passport from 'passport'
 import { AppModule } from './app.module'
 
-import {getSessionConfig} from '@config'
+import { getCorsConfig, getSessionConfig } from '@config'
 
 async function bootstrap() {
 	const app = await NestFactory.create(AppModule, {
-		rawBody:true
+		rawBody: true
 	})
 
 	const config = app.get(ConfigService)
@@ -24,11 +21,7 @@ async function bootstrap() {
 
 	app.use(helmet())
 
-	app.enableCors({
-		credentials: true,
-		origin: [config.get<string>('CLIENT_URL')],
-		allowedHeaders: ['X-Xsrf-Token']
-	})
+	app.enableCors(getCorsConfig(config))
 
 	app.setGlobalPrefix('api')
 

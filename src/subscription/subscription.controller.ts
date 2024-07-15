@@ -10,14 +10,13 @@ import { ConfigService } from '@nestjs/config'
 import { SubscribeInput } from './subscription.dto'
 import { SubscriptionService } from './subscription.service'
 
+import { AuthenticatedGuard, CurrentUser } from '@/common'
 import {
 	EventName,
 	TypeEvent,
 	TypeInvoiceEvent,
 	TypeOrderEvent
 } from '@/subscription/subscription.types'
-import { CurrentUser } from '@app/decorators'
-import { AuthenticatedGuard } from '@app/guards'
 import { lemonSqueezySetup } from '@lemonsqueezy/lemonsqueezy.js'
 import { User } from '@prisma/client'
 

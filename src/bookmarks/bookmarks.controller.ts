@@ -1,5 +1,4 @@
-import { CurrentUser } from '@app/decorators'
-import { AuthenticatedGuard } from '@app/guards'
+import { AuthenticatedGuard, CurrentUser } from '@/common'
 import {
 	Body,
 	Controller,
@@ -11,13 +10,17 @@ import {
 	UseGuards
 } from '@nestjs/common'
 import { BookmarksService } from './bookmarks.service'
-import { CreateBookmarkInput, DeleteBookmarkInput, GetAllBookmarksInput } from './dto'
+import {
+	CreateBookmarkInput,
+	DeleteBookmarkInput,
+	GetAllBookmarksInput
+} from './dto'
 
+@UseGuards(AuthenticatedGuard)
 @Controller('bookmarks')
 export class BookmarksController {
 	constructor(private readonly bookmarksService: BookmarksService) {}
 
-	@UseGuards(AuthenticatedGuard)
 	@Get()
 	getAllBookmarks(
 		@Query() dto: GetAllBookmarksInput,
@@ -26,7 +29,6 @@ export class BookmarksController {
 		return this.bookmarksService.getAll(dto, userId)
 	}
 
-	@UseGuards(AuthenticatedGuard)
 	@Post()
 	createBookmark(
 		@Body() dto: CreateBookmarkInput,
@@ -35,12 +37,11 @@ export class BookmarksController {
 		return this.bookmarksService.create(dto, userId)
 	}
 
-	@UseGuards(AuthenticatedGuard)
 	@Delete('/:bookmarkId')
 	deleteBookmark(
 		@Param() params: DeleteBookmarkInput,
 		@CurrentUser('id') userId: string
 	) {
-    return this.bookmarksService.delete(params.bookmarkId, userId)
-  }
+		return this.bookmarksService.delete(params.bookmarkId, userId)
+	}
 }

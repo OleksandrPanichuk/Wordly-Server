@@ -107,13 +107,8 @@
       "<rootDir>/libs/"
     ],
     "moduleNameMapper": {
-      "^@app/common(|/.*)$": "<rootDir>/libs/common/src/$1",
-      "^@app/helpers(|/.*)$": "<rootDir>/libs/helpers/src/$1",
       "^@app/prisma(|/.*)$": "<rootDir>/libs/prisma/src/$1",
-      "^@app/guards(|/.*)$": "<rootDir>/libs/guards/src/$1",
-      "^@app/decorators(|/.*)$": "<rootDir>/libs/decorators/src/$1",
       "^@app/mailer(|/.*)$": "<rootDir>/libs/mailer/src/$1",
-      "^@app/interceptors(|/.*)$": "<rootDir>/libs/interceptors/src/$1",
       "^@app/storage(|/.*)$": "<rootDir>/libs/storage/src/$1"
     }
   }

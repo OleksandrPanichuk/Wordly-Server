@@ -1,4 +1,4 @@
-import { Templates } from '@/constants'
+import { Templates } from '@/common'
 import { MailerService } from '@app/mailer'
 import { PrismaService } from '@app/prisma'
 import { Injectable, NotFoundException } from '@nestjs/common'

@@ -1,13 +1,11 @@
-import { generateErrorResponse } from '@app/helpers'
+import { generateErrorResponse } from '@/common'
 import { PrismaService } from '@app/prisma'
 import { Injectable, NotFoundException } from '@nestjs/common'
 import { User } from '@prisma/client'
 
 @Injectable()
 export class UsersService {
-	constructor(
-		private readonly prisma: PrismaService
-	) {}
+	constructor(private readonly prisma: PrismaService) {}
 	public async findById(userId: string): Promise<User> {
 		try {
 			const user = await this.prisma.user.findUnique({

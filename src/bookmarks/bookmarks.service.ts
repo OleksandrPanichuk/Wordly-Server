@@ -1,4 +1,4 @@
-import { generateErrorResponse } from '@app/helpers'
+import { generateErrorResponse } from '@/common'
 import { PrismaService } from '@app/prisma'
 import { Injectable } from '@nestjs/common'
 import { BookmarkType } from '@prisma/client'

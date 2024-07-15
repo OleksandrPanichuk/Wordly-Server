@@ -1,4 +1,4 @@
-import { generateErrorResponse } from '@app/helpers'
+import { generateErrorResponse } from '@/common'
 import { PrismaService } from '@app/prisma'
 import { createCheckout } from '@lemonsqueezy/lemonsqueezy.js'
 import {
@@ -85,7 +85,7 @@ export class SubscriptionService {
 	public async getSubscription(dto: GetSubscriptionInput) {
 		const subscription = await this.prisma.subscriptions.findUnique({
 			where: {
-				userId: dto.userId,
+				userId: dto.userId
 			}
 		})
 
@@ -159,7 +159,6 @@ export class SubscriptionService {
 
 		const { billing_reason, subtotal, tax, total, status } =
 			event.data.attributes
-
 
 		if (status !== 'paid') {
 			console.error('Payment status is not "paid":', status)

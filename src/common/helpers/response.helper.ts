@@ -1,4 +1,4 @@
-import { PrismaClientErrorCodes } from '@/types'
+import { PrismaClientErrorCodes } from '@/common'
 import { HttpException, HttpExceptionOptions, HttpStatus } from '@nestjs/common'
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library'
 
