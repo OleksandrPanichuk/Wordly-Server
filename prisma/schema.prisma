@@ -50,6 +50,17 @@ enum BillingReason {
   updated
 }
 
+enum BookmarkType {
+  WORD
+  LIST
+  PACK
+  SET
+}
+
+enum MeaningType {
+  WORD
+}
+
 type File {
   url String  @db.String
   key String?
@@ -115,7 +126,7 @@ model Subscriptions {
   productId        Int
 
   endsAt    DateTime?
-  createdAt DateTime @default(now())
+  createdAt DateTime  @default(now())
 
   userId String @unique @db.ObjectId
   user   User   @relation(fields: [userId], references: [id])
@@ -131,7 +142,6 @@ model Payments {
   subscription   Subscriptions? @relation(fields: [subscriptionId], references: [id])
   subscriptionId String?        @db.ObjectId
 
-
   billingReason BillingReason
 
   subtotal Int
@@ -145,8 +155,22 @@ model Payments {
 model Bookmarks {
   id String @id @default(auto()) @map("_id") @db.ObjectId
 
-  user   User   @relation(fields: [userId], references: [id])
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId String @db.ObjectId
+
+  type BookmarkType @default(WORD)
+
+  set   Set?    @relation(fields: [setId], references: [id], onDelete: Cascade)
+  setId String? @db.ObjectId
+
+  pack   Pack?   @relation(fields: [packId], references: [id], onDelete: Cascade)
+  packId String? @db.ObjectId
+
+  word   Word?   @relation(fields: [wordId], references: [id], onDelete: Cascade)
+  wordId String? @db.ObjectId
+
+  wordList   WordList? @relation(fields: [wordListId], references: [id], onDelete: Cascade)
+  wordListId String?   @db.ObjectId
 }
 
 // Vocabulary section & Dictionary
@@ -159,15 +183,17 @@ model Pack {
   mode   Mode   @default(USER)
   status Status @default(PRIVATE)
   type   Type
+
+  bookmarks Bookmarks[]
 }
 
 model PackToSet {
   id String @id @default(auto()) @map("_id") @db.ObjectId
 
-  set   Set    @relation(fields: [setId], references: [id])
+  set   Set    @relation(fields: [setId], references: [id], onDelete: Cascade)
   setId String @db.ObjectId
 
-  pack   Pack   @relation(fields: [packId], references: [id])
+  pack   Pack   @relation(fields: [packId], references: [id], onDelete: Cascade)
   packId String @db.ObjectId
 }
 
@@ -184,15 +210,17 @@ model Set {
   name        String
   description String @db.String
   type        Type
+
+  bokmarks Bookmarks[]
 }
 
 model WordListToSet {
   id String @id @default(auto()) @map("_id") @db.ObjectId
 
-  wordList   WordList @relation(fields: [wordListId], references: [id])
+  wordList   WordList @relation(fields: [wordListId], references: [id], onDelete: Cascade)
   wordListId String   @db.ObjectId
 
-  set   Set    @relation(fields: [setId], references: [id])
+  set   Set    @relation(fields: [setId], references: [id], onDelete: Cascade)
   setId String @db.ObjectId
 }
 
@@ -208,6 +236,8 @@ model WordList {
   type        Type
   name        String
   description String @db.String
+
+  bookmarks Bookmarks[]
 }
 
 model WordToList {
@@ -232,6 +262,8 @@ model Word {
   partsOfSpeech PartOfSpeech[]
 
   lists WordToList[]
+
+  bookmarks Bookmarks[]
 }
 
 type Transcription {
@@ -245,11 +277,14 @@ model Meanings {
   definition   String
   image        File?
   examples     String[]
-  partOfSpeech PartOfSpeech
+  partOfSpeech PartOfSpeech?
 
-  word   Word         @relation(fields: [wordId], references: [id], onDelete: Cascade)
-  wordId String       @db.ObjectId
-  lists  WordToList[] // Списки в яких використовується це визначення
+  type MeaningType @default(WORD)
+
+  word   Word?   @relation(fields: [wordId], references: [id], onDelete: Cascade)
+  wordId String? @db.ObjectId
+
+  lists WordToList[] // Списки в яких використовується це визначення
 }
 
 // Training
@@ -265,3 +300,5 @@ model TrainingSession {
 
   type TrainingType
 }
+
+// TODO: Expression model, Phrasal Verb model

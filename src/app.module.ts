@@ -8,6 +8,12 @@ import { AuthModule } from './auth/auth.module'
 import { DictionaryModule } from './dictionary/dictionary.module'
 import { SubscriptionModule } from './subscription/subscription.module'
 import { UsersModule } from './users/users.module'
+import { WordsModule } from './words/words.module';
+import { MeaningsModule } from './meanings/meanings.module';
+import { BookmarksModule } from './bookmarks/bookmarks.module';
+import { SetsModule } from './sets/sets.module';
+import { PacksModule } from './packs/packs.module';
+import { WordListsModule } from './word-lists/word-lists.module';
 
 @Module({
 	imports: [
@@ -24,7 +30,13 @@ import { UsersModule } from './users/users.module'
 		UsersModule,
 		PrismaModule,
 		DictionaryModule,
-		SubscriptionModule
+		SubscriptionModule,
+		WordsModule,
+		MeaningsModule,
+		BookmarksModule,
+		SetsModule,
+		PacksModule,
+		WordListsModule
 	]
 })
 export class AppModule {}

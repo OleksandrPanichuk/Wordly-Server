@@ -3,12 +3,12 @@ import { IsMongoId, IsNotEmpty, IsString } from 'class-validator'
 export class SubscribeInput {
 	@IsString()
 	@IsNotEmpty()
-	productId: string
+	readonly productId: string
 }
 
 
 export class GetSubscriptionInput {
 	@IsString()
 	@IsMongoId()
-	userId: string
+	readonly userId: string
 }
