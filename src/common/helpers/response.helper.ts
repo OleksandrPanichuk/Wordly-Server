@@ -17,11 +17,7 @@ export function generateErrorResponse(
 		cause = 'Internal Error',
 		status = 500
 	}: CustomErrorConfig = {},
-	{
-		cause: pCause,
-		description: pDescription,
-		message: pMessage
-	}: Omit<CustomErrorConfig, 'status'> = {}
+	prismaErrorConfig: Omit<CustomErrorConfig, 'status'> = {}
 ) {
 	if (err instanceof HttpException) {
 		let description
@@ -39,27 +35,27 @@ export function generateErrorResponse(
 	}
 
 	if (err instanceof PrismaClientKnownRequestError) {
+		const { cause, description, message } = prismaErrorConfig
 		const options: HttpExceptionOptions = {
-			cause: pCause,
-			description: pDescription
+			cause,
+			description
 		}
 		switch (err.code as PrismaClientErrorCodes) {
 			case PrismaClientErrorCodes.NOT_FOUND: {
-				const message = pMessage ?? 'Not Found'
-				throw new HttpException(message, HttpStatus.NOT_FOUND, options)
+				const msg = message ?? 'Not Found'
+				throw new HttpException(msg, HttpStatus.NOT_FOUND, options)
 			}
 			case PrismaClientErrorCodes.OUT_OF_RANGE: {
-				const message =
-					pMessage ?? 'Some of provided input values is out of range'
-				throw new HttpException(message, HttpStatus.BAD_REQUEST, options)
+				const msg = message ?? 'Some of provided input values is out of range'
+				throw new HttpException(msg, HttpStatus.BAD_REQUEST, options)
 			}
 			case PrismaClientErrorCodes.TIMED_OUT: {
-				const message = pMessage ?? 'Request timed out'
-				throw new HttpException(message, HttpStatus.REQUEST_TIMEOUT, options)
+				const msg = message ?? 'Request timed out'
+				throw new HttpException(msg, HttpStatus.REQUEST_TIMEOUT, options)
 			}
 			case PrismaClientErrorCodes.VALIDATION_ERROR: {
-				const message = pMessage ?? 'Validation error'
-				throw new HttpException(message, HttpStatus.BAD_REQUEST, options)
+				const msg = message ?? 'Validation error'
+				throw new HttpException(msg, HttpStatus.BAD_REQUEST, options)
 			}
 		}
 	}

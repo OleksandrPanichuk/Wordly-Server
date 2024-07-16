@@ -8,12 +8,13 @@ import { AuthModule } from './auth/auth.module'
 import { DictionaryModule } from './dictionary/dictionary.module'
 import { SubscriptionModule } from './subscription/subscription.module'
 import { UsersModule } from './users/users.module'
-import { WordsModule } from './words/words.module';
-import { MeaningsModule } from './meanings/meanings.module';
-import { BookmarksModule } from './bookmarks/bookmarks.module';
-import { SetsModule } from './sets/sets.module';
-import { PacksModule } from './packs/packs.module';
-import { WordListsModule } from './word-lists/word-lists.module';
+import { WordsModule } from './words/words.module'
+import { MeaningsModule } from './meanings/meanings.module'
+import { BookmarksModule } from './bookmarks/bookmarks.module'
+import { SetsModule } from './sets/sets.module'
+import { PacksModule } from './packs/packs.module'
+import { ListsModule } from './lists/lists.module'
+import { MulterModule } from '@nestjs/platform-express'
 
 @Module({
 	imports: [
@@ -21,10 +22,15 @@ import { WordListsModule } from './word-lists/word-lists.module';
 		ConfigModule.forRoot({
 			isGlobal: true
 		}),
+		MulterModule.register({
+			limits: {
+				fileSize: 10 * 1024 * 1024
+			}
+		}),
 		CacheModule.register({
 			isGlobal: true,
 			store: redisStore,
-			ttl: 7200,
+			ttl: 3600,
 			url: process.env.REDIS_URL
 		}),
 		UsersModule,
@@ -36,7 +42,7 @@ import { WordListsModule } from './word-lists/word-lists.module';
 		BookmarksModule,
 		SetsModule,
 		PacksModule,
-		WordListsModule
+		ListsModule
 	]
 })
 export class AppModule {}

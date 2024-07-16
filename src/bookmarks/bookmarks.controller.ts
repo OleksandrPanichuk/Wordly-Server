@@ -10,11 +10,7 @@ import {
 	UseGuards
 } from '@nestjs/common'
 import { BookmarksService } from './bookmarks.service'
-import {
-	CreateBookmarkInput,
-	DeleteBookmarkInput,
-	GetAllBookmarksInput
-} from './dto'
+import { CreateBookmarkInput, GetAllBookmarksInput } from './dto'
 
 @UseGuards(AuthenticatedGuard)
 @Controller('bookmarks')
@@ -39,9 +35,9 @@ export class BookmarksController {
 
 	@Delete('/:bookmarkId')
 	deleteBookmark(
-		@Param() params: DeleteBookmarkInput,
+		@Param('bookmarkId') id: string,
 		@CurrentUser('id') userId: string
 	) {
-		return this.bookmarksService.delete(params.bookmarkId, userId)
+		return this.bookmarksService.delete(id, userId)
 	}
 }

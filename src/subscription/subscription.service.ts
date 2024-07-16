@@ -28,15 +28,15 @@ export class SubscriptionService {
 
 	public async checkout(dto: SubscribeInput, user: User) {
 		try {
-			// const billingInfo = await this.prisma.billingInfo.findUnique({
-			// 	where: {
-			// 		userId: user.id
-			// 	}
-			// })
+			const billingInfo = await this.prisma.billingInfo.findUnique({
+				where: {
+					userId: user.id
+				}
+			})
 
-			// if (!billingInfo) {
-			// 	throw new BadRequestException('You need to provide billing info first')
-			// }
+			if (!billingInfo) {
+				throw new BadRequestException('You need to provide billing info first')
+			}
 
 			const { data, error } = await createCheckout(
 				this.config.get('LEMON_SQUEEZY_STORE_ID'),
@@ -44,11 +44,11 @@ export class SubscriptionService {
 				{
 					checkoutData: {
 						email: user.email,
-						// name: `${billingInfo.firstName} ${billingInfo.lastName}`,
-						// billingAddress: {
-						// 	country: billingInfo.country as any,
-						// 	zip: billingInfo.postalCode
-						// },
+						name: `${billingInfo.firstName} ${billingInfo.lastName}`,
+						billingAddress: {
+							country: billingInfo.country as any,
+							zip: billingInfo.postalCode
+						},
 						custom: {
 							userId: user.id
 						}
@@ -209,5 +209,28 @@ export class SubscriptionService {
 				subscriptionId: newSubscription.id
 			}
 		})
+	}
+
+	public async checkIsSubscribed(userId: string): Promise<boolean> {
+		const subscription = await this.prisma.subscriptions.findUnique({
+			where: {
+				userId
+			}
+		})
+
+		if (!subscription) {
+			return false
+		}
+
+		if (Date.now() > subscription.endsAt.getTime()) {
+			await this.prisma.subscriptions.delete({
+				where: {
+					id: subscription.id
+				}
+			})
+			return false
+		}
+
+		return true
 	}
 }

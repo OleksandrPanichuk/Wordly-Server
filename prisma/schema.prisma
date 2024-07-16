@@ -7,6 +7,11 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum UserRole {
+  USER
+  ADMIN
+}
+
 enum Mode {
   USER
   ADMIN
@@ -17,7 +22,7 @@ enum Gender {
   FEMALE
 }
 
-enum Type {
+enum LearnType {
   VOCABULARY
   EXPRESSIONS
 }
@@ -57,8 +62,16 @@ enum BookmarkType {
   SET
 }
 
-enum MeaningType {
-  WORD
+enum ExpressionType {
+  COLLOCATION
+  IDIOM
+  PROVERB
+  PHRASAL_VERB
+}
+
+enum AllowedUserType {
+  SET
+  WORD_LIST
 }
 
 type File {
@@ -68,6 +81,8 @@ type File {
 
 model User {
   id String @id @default(auto()) @map("_id") @db.ObjectId
+
+  role UserRole @default(USER)
 
   username String
 
@@ -84,10 +99,14 @@ model User {
 
   passwordResetLink PasswordResetLink[]
   trainingSessions  TrainingSession[]
-  bookmarks         Bookmarks[]
 
   billingInfo  BillingInfo?
   subscription Subscriptions?
+
+  bookmarks       Bookmarks[]
+  canAccess       AllowedUser[]
+  createdMeanings Meanings[]
+  createdWords    Word[]
 }
 
 model PasswordResetLink {
@@ -169,21 +188,17 @@ model Bookmarks {
   word   Word?   @relation(fields: [wordId], references: [id], onDelete: Cascade)
   wordId String? @db.ObjectId
 
-  wordList   WordList? @relation(fields: [wordListId], references: [id], onDelete: Cascade)
-  wordListId String?   @db.ObjectId
+  list   List?   @relation(fields: [listId], references: [id], onDelete: Cascade)
+  listId String? @db.ObjectId
 }
 
-// Vocabulary section & Dictionary
-
 model Pack {
-  id String @id @default(auto()) @map("_id") @db.ObjectId
+  id   String @id @default(auto()) @map("_id") @db.ObjectId
+  name String
 
-  sets PackToSet[]
+  type LearnType @default(VOCABULARY)
 
-  mode   Mode   @default(USER)
-  status Status @default(PRIVATE)
-  type   Type
-
+  sets      PackToSet[]
   bookmarks Bookmarks[]
 }
 
@@ -197,54 +212,75 @@ model PackToSet {
   packId String @db.ObjectId
 }
 
+model AllowedUser {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+
+  type AllowedUserType
+
+  user   User   @relation(fields: [userId], references: [id])
+  userId String @db.ObjectId
+
+  set   Set?    @relation(fields: [setId], references: [id])
+  setId String? @db.ObjectId
+
+  list   List?   @relation(fields: [listId], references: [id])
+  listId String? @db.ObjectId
+}
+
 model Set {
   id String @id @default(auto()) @map("_id") @db.ObjectId
 
-  lists WordListToSet[]
+  lists ListToSet[]
   packs PackToSet[]
 
-  mode Mode @default(USER)
+  mode   Mode   @default(USER)
+  status Status @default(PRIVATE)
 
-  status      Status @default(PRIVATE)
+  allowedUsers AllowedUser[]
+
   image       File
   name        String
-  description String @db.String
-  type        Type
+  description String    @db.String
+  type        LearnType @default(VOCABULARY)
 
   bokmarks Bookmarks[]
 }
 
-model WordListToSet {
+model ListToSet {
   id String @id @default(auto()) @map("_id") @db.ObjectId
 
-  wordList   WordList @relation(fields: [wordListId], references: [id], onDelete: Cascade)
-  wordListId String   @db.ObjectId
+  wordList   List   @relation(fields: [wordListId], references: [id], onDelete: Cascade)
+  wordListId String @db.ObjectId
 
   set   Set    @relation(fields: [setId], references: [id], onDelete: Cascade)
   setId String @db.ObjectId
 }
 
-model WordList {
+model List {
   id String @id @default(auto()) @map("_id") @db.ObjectId
 
   trainingSessions TrainingSession[]
+  sets             ListToSet[]
   words            WordToList[]
-  sets             WordListToSet[]
+  expressions      ExpressionToList[]
 
-  mode        Mode   @default(USER)
-  status      Status @default(PRIVATE)
-  type        Type
+  mode   Mode   @default(USER)
+  status Status @default(PRIVATE)
+
+  type LearnType @default(VOCABULARY)
+
   name        String
   description String @db.String
 
-  bookmarks Bookmarks[]
+  bookmarks    Bookmarks[]
+  allowedUsers AllowedUser[]
 }
 
 model WordToList {
   id String @id @default(auto()) @map("_id") @db.ObjectId
 
-  wordList   WordList @relation(fields: [wordListId], references: [id], onDelete: Cascade)
-  wordListId String   @db.ObjectId
+  list   List   @relation(fields: [listId], references: [id], onDelete: Cascade)
+  listId String @db.ObjectId
 
   word   Word   @relation(fields: [wordId], references: [id], onDelete: Cascade)
   wordId String @db.ObjectId
@@ -253,38 +289,17 @@ model WordToList {
   meaningsId String   @db.ObjectId
 }
 
-model Word {
+model ExpressionToList {
   id String @id @default(auto()) @map("_id") @db.ObjectId
 
-  name          String
-  meanings      Meanings[]
-  transcription Transcription
-  partsOfSpeech PartOfSpeech[]
+  list   List   @relation(fields: [listId], references: [id], onDelete: Cascade)
+  listId String @db.ObjectId
 
-  lists WordToList[]
+  expression   Expression @relation(fields: [expressionId], references: [id], onDelete: Cascade)
+  expressionId String     @db.ObjectId
 
-  bookmarks Bookmarks[]
-}
-
-type Transcription {
-  en String?
-  us String?
-}
-
-model Meanings {
-  id String @id @default(auto()) @map("_id") @db.ObjectId
-
-  definition   String
-  image        File?
-  examples     String[]
-  partOfSpeech PartOfSpeech?
-
-  type MeaningType @default(WORD)
-
-  word   Word?   @relation(fields: [wordId], references: [id], onDelete: Cascade)
-  wordId String? @db.ObjectId
-
-  lists WordToList[] // Списки в яких використовується це визначення
+  meaning    Meanings @relation(fields: [meaningsId], references: [id], onDelete: Cascade)
+  meaningsId String   @db.ObjectId
 }
 
 // Training
@@ -295,10 +310,66 @@ model TrainingSession {
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId String @db.ObjectId
 
-  list   WordList @relation(fields: [listId], references: [id], onDelete: Cascade)
-  listId String   @db.ObjectId
+  list   List   @relation(fields: [listId], references: [id], onDelete: Cascade)
+  listId String @db.ObjectId
 
   type TrainingType
 }
 
-// TODO: Expression model, Phrasal Verb model
+// Word and Expression models
+
+type Transcription {
+  en String?
+  us String?
+}
+
+model Expression {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+
+  type          ExpressionType
+  text          String
+  transcription Transcription?
+  partsOfSpeach PartOfSpeech[]
+  meanings      Meanings[]
+  lists         ExpressionToList[]
+}
+
+model Word {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+
+  name     String
+  meanings Meanings[]
+
+  transcription Transcription
+  partsOfSpeech PartOfSpeech[]
+
+  lists WordToList[]
+
+  bookmarks Bookmarks[]
+
+  creator   User?   @relation(fields: [creatorId], references: [id], onDelete: SetNull)
+  creatorId String? @db.ObjectId
+}
+
+model Meanings {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+
+  type LearnType @default(VOCABULARY)
+
+  definition   String
+  image        File?
+  examples     String[]
+  partOfSpeech PartOfSpeech
+
+  wordLists       WordToList[] // Списки в яких використовується це визначення
+  expressionLists ExpressionToList[]
+
+  word   Word?   @relation(fields: [wordId], references: [id], onDelete: Cascade)
+  wordId String? @db.ObjectId
+
+  expression   Expression? @relation(fields: [expressionId], references: [id], onDelete: Cascade)
+  expressionId String?     @db.ObjectId
+
+  creator   User?   @relation(fields: [creatorId], references: [id], onDelete: SetNull)
+  creatorId String? @db.ObjectId
+}

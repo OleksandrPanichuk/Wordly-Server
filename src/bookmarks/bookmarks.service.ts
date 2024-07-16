@@ -57,7 +57,7 @@ export class BookmarksService {
 					return await this.prisma.bookmarks.create({
 						data: {
 							type: dto.type,
-							wordListId: dto.itemId,
+							listId: dto.itemId,
 							userId
 						}
 					})

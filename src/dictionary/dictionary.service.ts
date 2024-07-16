@@ -1,10 +1,10 @@
+import { DICTIONARY_API_URL } from '@/common'
 import { PrismaService } from '@app/prisma'
 import { HttpService } from '@nestjs/axios'
 import { Injectable, NotFoundException } from '@nestjs/common'
 import { PartOfSpeech } from '@prisma/client'
 import { firstValueFrom } from 'rxjs'
 import { v4 as uuid } from 'uuid'
-import { DICTIONARY_API_URL } from '../constants'
 import { GetWordByNameInput, GetWordByNameResponse } from './dictionary.dto'
 import {
 	TypeDictionaryNotFound,
@@ -217,7 +217,7 @@ export class DictionaryService {
 						}
 					]
 				}
-				
+
 				if (item.example) {
 					examples.push(...extractedExamples)
 				}

@@ -1,20 +1,24 @@
-import { PrismaService } from '@app/prisma'
 import { CanActivate, ExecutionContext } from '@nestjs/common'
-import { User } from '@prisma/client'
+import { PrismaClient, User } from '@prisma/client'
 import { Request } from 'express'
 
-export class SubscribedGuard implements CanActivate {
-	constructor(private readonly prisma: PrismaService) {}
-
+export class SubscribedGuard implements CanActivate 
+{
 	async canActivate(context: ExecutionContext): Promise<boolean> {
+		const prisma = new PrismaClient()
+
 		const req = context.switchToHttp().getRequest<Request>()
 		const authenticated = req.isAuthenticated()
 
-		if (!authenticated) return false
+		
+
+		if (!authenticated) {
+			return false
+		}
 
 		const user = req.user as User
 
-		const subscription = await this.prisma.subscriptions.findUnique({
+		const subscription = await prisma.subscriptions.findUnique({
 			where: {
 				userId: user.id
 			}
@@ -25,7 +29,7 @@ export class SubscribedGuard implements CanActivate {
 		}
 
 		if (Date.now() > subscription.endsAt.getTime()) {
-			await this.prisma.subscriptions.delete({
+			await prisma.subscriptions.delete({
 				where: {
 					id: subscription.id
 				}

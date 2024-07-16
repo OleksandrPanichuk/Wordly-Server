@@ -11,24 +11,6 @@
     "watchAssets": true
   },
   "projects": {
-    "common": {
-      "type": "library",
-      "root": "libs/common",
-      "entryFile": "index",
-      "sourceRoot": "libs/common/src",
-      "compilerOptions": {
-        "tsConfigPath": "libs/common/tsconfig.lib.json"
-      }
-    },
-    "helpers": {
-      "type": "library",
-      "root": "libs/helpers",
-      "entryFile": "index",
-      "sourceRoot": "libs/helpers/src",
-      "compilerOptions": {
-        "tsConfigPath": "libs/helpers/tsconfig.lib.json"
-      }
-    },
     "prisma": {
       "type": "library",
       "root": "libs/prisma",
@@ -38,24 +20,6 @@
         "tsConfigPath": "libs/prisma/tsconfig.lib.json"
       }
     },
-    "guards": {
-      "type": "library",
-      "root": "libs/guards",
-      "entryFile": "index",
-      "sourceRoot": "libs/guards/src",
-      "compilerOptions": {
-        "tsConfigPath": "libs/guards/tsconfig.lib.json"
-      }
-    },
-    "decorators": {
-      "type": "library",
-      "root": "libs/decorators",
-      "entryFile": "index",
-      "sourceRoot": "libs/decorators/src",
-      "compilerOptions": {
-        "tsConfigPath": "libs/decorators/tsconfig.lib.json"
-      }
-    },
     "mailer": {
       "type": "library",
       "root": "libs/mailer",
@@ -63,15 +27,6 @@
       "sourceRoot": "libs/mailer/src",
       "compilerOptions": {
         "tsConfigPath": "libs/mailer/tsconfig.lib.json"
-      }
-    },
-    "interceptors": {
-      "type": "library",
-      "root": "libs/interceptors",
-      "entryFile": "index",
-      "sourceRoot": "libs/interceptors/src",
-      "compilerOptions": {
-        "tsConfigPath": "libs/interceptors/tsconfig.lib.json"
       }
     },
     "storage": {
