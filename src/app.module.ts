@@ -31,7 +31,7 @@ import { MulterModule } from '@nestjs/platform-express'
 			isGlobal: true,
 			store: redisStore,
 			ttl: 3600,
-			url: process.env.REDIS_URL
+			url: process.env.REDIS_URL,
 		}),
 		UsersModule,
 		PrismaModule,

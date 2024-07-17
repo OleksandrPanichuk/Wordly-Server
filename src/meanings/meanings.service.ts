@@ -24,9 +24,9 @@ export class MeaningsService {
 
 	public async get(dto: GetMeaningsInput) {
 		try {
-			const meaningsFromCache: Meanings[] = await this.cache.get(
-				'meanings:' + JSON.stringify(dto)
-			)
+			const cacheKey = 'meanings:' + JSON.stringify(dto)
+
+			const meaningsFromCache: Meanings[] = await this.cache.get(cacheKey)
 
 			if (meaningsFromCache) {
 				return meaningsFromCache
@@ -52,7 +52,7 @@ export class MeaningsService {
 				where: whereCondition
 			})
 
-			await this.cache.store.set('meanings:' + JSON.stringify(dto), meanings)
+			await this.cache.store.set(cacheKey, meanings)
 
 			return meanings
 		} catch (err) {
@@ -84,7 +84,6 @@ export class MeaningsService {
 				data
 			})
 		} catch (err) {
-			console.log('ERROR', err)
 			throw generateErrorResponse(err)
 		}
 	}
@@ -114,14 +113,15 @@ export class MeaningsService {
 				throw new ForbiddenException('Not allowed to update this meaning')
 			}
 
-			const isSubscribed = await this.subscriptionService.checkIsSubscribed(
-				user.id
-			)
-
-			if (!isAdmin && !isSubscribed) {
-				throw new ForbiddenException(
-					'Only subscribed users allowed to update meanings'
+			if (!isAdmin) {
+				const isSubscribed = await this.subscriptionService.checkIsSubscribed(
+					user.id
 				)
+				if (!isSubscribed) {
+					throw new ForbiddenException(
+						'Only subscribed users allowed to update meanings'
+					)
+				}
 			}
 
 			const uploadedImage = await this.storage.upload(image)
@@ -152,7 +152,7 @@ export class MeaningsService {
 			const meaning = await this.prisma.meanings.findUnique({
 				where: { id },
 				select: {
-					creatorId:true
+					creatorId: true
 				}
 			})
 
@@ -198,7 +198,7 @@ export class MeaningsService {
 	}
 
 	private async clearCachedMeanings() {
-		const keys = await this.cache.store.keys()
+		const keys: string[] = await this.cache.store.keys()
 		const cachedMeaningsKeys = keys.filter((key) => key.startsWith('meanings'))
 
 		if (cachedMeaningsKeys.length) {
