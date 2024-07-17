@@ -329,7 +329,7 @@ model Expression {
   type          ExpressionType
   text          String
   transcription Transcription?
-  partsOfSpeach PartOfSpeech[]
+  partsOfSpeech PartOfSpeech[]
   meanings      Meanings[]
   lists         ExpressionToList[]
 }

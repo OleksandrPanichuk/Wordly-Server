@@ -9,7 +9,14 @@ import {
 	Injectable,
 	NotFoundException
 } from '@nestjs/common'
-import { LearnType, Meanings, Prisma, User, UserRole } from '@prisma/client'
+import {
+	LearnType,
+	Meanings,
+	PartOfSpeech,
+	Prisma,
+	User,
+	UserRole
+} from '@prisma/client'
 import { Cache } from 'cache-manager'
 import { CreateMeaningInput, GetMeaningsInput, UpdateMeaningInput } from './dto'
 
@@ -79,6 +86,8 @@ export class MeaningsService {
 			}
 
 			await this.clearCachedMeanings()
+
+			await this.updatePartsOfSpeech(itemId, dto.partOfSpeech, dto.type)
 
 			return await this.prisma.meanings.create({
 				data
@@ -203,6 +212,61 @@ export class MeaningsService {
 
 		if (cachedMeaningsKeys.length) {
 			await this.cache.store.del(...cachedMeaningsKeys)
+		}
+	}
+
+	private async updatePartsOfSpeech(
+		id: string,
+		partOfSpeech: PartOfSpeech,
+		type: LearnType
+	) {
+		let item: { partsOfSpeech: PartOfSpeech[] }
+		switch (type) {
+			case LearnType.VOCABULARY: {
+				item = await this.prisma.word.findUnique({
+					where: { id }
+				})
+				break
+			}
+			case LearnType.EXPRESSIONS: {
+				item = await this.prisma.expression.findUnique({
+					where: { id }
+				})
+				break
+			}
+		}
+
+		if (!item) {
+			throw new NotFoundException('Word not found')
+		}
+
+		if (item.partsOfSpeech.includes(partOfSpeech)) {
+			return
+		}
+
+		switch (type) {
+			case LearnType.VOCABULARY: {
+				await this.prisma.word.update({
+					where: {
+						id
+					},
+					data: {
+						partsOfSpeech: [...item.partsOfSpeech, partOfSpeech]
+					}
+				})
+				break
+			}
+			case LearnType.EXPRESSIONS: {
+				await this.prisma.expression.update({
+					where: {
+						id
+					},
+					data: {
+						partsOfSpeech: [...item.partsOfSpeech, partOfSpeech]
+					}
+				})
+				break
+			}
 		}
 	}
 }
