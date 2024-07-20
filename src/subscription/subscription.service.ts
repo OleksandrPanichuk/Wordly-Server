@@ -30,6 +30,7 @@ export class SubscriptionService {
 		try {
 			const billingInfo = await this.prisma.billingInfo.findUnique({
 				where: {
+					
 					userId: user.id
 				}
 			})
