@@ -7,6 +7,25 @@ import { CreateBillingInfoInput, UpdateBillingInfoInput } from './dto'
 export class BillingInfoService {
 	constructor(private readonly prisma: PrismaService) {}
 
+
+	public async get(userId:string) {
+		try {
+			const billingInfo = await this.prisma.billingInfo.findUnique({
+				where: {
+					userId
+				}
+			})
+
+			if(!billingInfo) {
+				throw new NotFoundException('Billing information is not found')
+			}
+
+			return billingInfo
+		} catch (err) {
+			throw generateErrorResponse(err)
+		}
+	}
+
 	public async create(dto: CreateBillingInfoInput, userId:string) {
 		try {	
 			const billingInfo  = await this.prisma.billingInfo.findUnique({
@@ -22,7 +41,7 @@ export class BillingInfoService {
 			return await this.prisma.billingInfo.create({
 				data:{
 					...dto,
-					userId
+					userId 
 				}
 			})
 		} catch (err) {

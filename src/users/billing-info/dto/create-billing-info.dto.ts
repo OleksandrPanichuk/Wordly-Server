@@ -1,5 +1,6 @@
 import { Prisma } from '@prisma/client'
 import {
+	IsEmail,
 	IsNotEmpty,
 	IsNumber,
 	IsPositive,
@@ -10,6 +11,11 @@ import {
 export class CreateBillingInfoInput
 	implements Prisma.BillingInfoCreateWithoutUserInput
 {
+	@IsNotEmpty()
+	@IsString()
+	@IsEmail()
+	readonly email: string
+
 	@IsNotEmpty()
 	@IsString()
 	@MinLength(5)
@@ -27,7 +33,6 @@ export class CreateBillingInfoInput
 	@IsString()
 	@MinLength(3)
 	readonly firstName: string
-
 
 	@IsNotEmpty()
 	@IsString()

@@ -123,7 +123,7 @@ export class MeaningsService {
 			}
 
 			if (!isAdmin) {
-				const isSubscribed = await this.subscriptionService.checkIsSubscribed(
+				const isSubscribed = await this.subscriptionService.checkIfSubscribed(
 					user.id
 				)
 				if (!isSubscribed) {

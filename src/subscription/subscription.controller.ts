@@ -44,7 +44,7 @@ export class SubscriptionController {
 		@Headers('x-signature') signature: string,
 		@Headers('x-event-name') eventName: EventName
 	) {
-		this.subscriptionService.validateWebhook(rawBody, signature)
+		await this.subscriptionService.validateWebhook(rawBody, signature)
 
 		switch (eventName) {
 			case 'order_created':

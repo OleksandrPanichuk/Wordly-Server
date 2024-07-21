@@ -30,7 +30,6 @@ export class SubscriptionService {
 		try {
 			const billingInfo = await this.prisma.billingInfo.findUnique({
 				where: {
-					
 					userId: user.id
 				}
 			})
@@ -44,11 +43,11 @@ export class SubscriptionService {
 				dto.productId,
 				{
 					checkoutData: {
-						email: user.email,
+						email: billingInfo?.email ?? user.email,
 						name: `${billingInfo.firstName} ${billingInfo.lastName}`,
 						billingAddress: {
 							country: billingInfo.country as any,
-							zip: billingInfo.postalCode
+							zip: billingInfo.postalCode,
 						},
 						custom: {
 							userId: user.id
@@ -212,7 +211,7 @@ export class SubscriptionService {
 		})
 	}
 
-	public async checkIsSubscribed(userId: string): Promise<boolean> {
+	public async checkIfSubscribed(userId: string): Promise<boolean> {
 		const subscription = await this.prisma.subscriptions.findUnique({
 			where: {
 				userId

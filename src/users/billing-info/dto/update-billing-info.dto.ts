@@ -1,9 +1,23 @@
 import { Prisma } from '@prisma/client'
-import { IsNotEmpty, IsNumber, IsOptional, IsPositive, IsString, MinLength } from 'class-validator'
+import {
+	IsEmail,
+	IsNotEmpty,
+	IsNumber,
+	IsOptional,
+	IsPositive,
+	IsString,
+	MinLength
+} from 'class-validator'
 
 export class UpdateBillingInfoInput
 	implements Prisma.BillingInfoUpdateWithoutUserInput
 {
+	@IsOptional()
+	@IsNotEmpty()
+	@IsString()
+	@IsEmail()
+	readonly email?: string
+
 	@IsOptional()
 	@IsNotEmpty()
 	@IsString()

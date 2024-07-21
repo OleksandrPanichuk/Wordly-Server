@@ -1,9 +1,10 @@
-import { IsMongoId, IsNotEmpty, IsString } from 'class-validator'
+import { IsMongoId, IsNumber, IsPositive, IsString, Length } from 'class-validator'
 
 export class SubscribeInput {
-	@IsString()
-	@IsNotEmpty()
-	readonly productId: string
+	@IsNumber()
+	@IsPositive()
+	@Length(5)
+	readonly productId: number
 }
 
 
