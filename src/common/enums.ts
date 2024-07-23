@@ -4,3 +4,8 @@ export enum PrismaClientErrorCodes {
 	OUT_OF_RANGE = 'P2020',
 	VALIDATION_ERROR = 'P2007'
 }
+
+
+export enum EmailTemplates {
+	RESET_PASSWORD = 'reset-password.template.hbs'
+}

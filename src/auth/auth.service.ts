@@ -53,7 +53,7 @@ export class AuthService {
 				}
 			})
 
-			if (!user) throw new NotFoundException('User not found')
+			if (!user) throw new NotFoundException('Invalid email or password')
 
 			const isPasswordMatchHash = await compare(dto.password, user.hash)
 

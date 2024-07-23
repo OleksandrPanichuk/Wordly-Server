@@ -1,6 +1,7 @@
 import {
 	Body,
 	Controller,
+	Get,
 	Headers,
 	Post,
 	RawBody,
@@ -31,6 +32,13 @@ export class SubscriptionController {
 		})
 	}
 
+	
+	@UseGuards(AuthenticatedGuard)
+	@Get()
+	getSubscription(@CurrentUser('id') userId:string) {
+		return this.subscriptionService.get(userId)
+	}
+
 	@UseGuards(AuthenticatedGuard)
 	@Post('')
 	checkout(@Body() dto: SubscribeInput, @CurrentUser() user: User) {
@@ -44,7 +52,7 @@ export class SubscriptionController {
 		@Headers('x-signature') signature: string,
 		@Headers('x-event-name') eventName: EventName
 	) {
-		this.subscriptionService.validateWebhook(rawBody, signature)
+		await this.subscriptionService.validateWebhook(rawBody, signature)
 
 		switch (eventName) {
 			case 'order_created':
@@ -82,5 +90,3 @@ export class SubscriptionController {
 		}
 	}
 }
-
-// @lemonsqueezy/lemonsqueezy.js

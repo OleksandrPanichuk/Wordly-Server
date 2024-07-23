@@ -127,11 +127,12 @@ model BillingInfo {
 
   firstName String
   lastName  String
+  email     String 
 
   country     String
   city        String
   address     String
-  phoneNumber Int
+  phoneNumber String
   postalCode  String
 
   user   User   @relation(fields: [userId], references: [id])

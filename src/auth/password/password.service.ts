@@ -1,4 +1,4 @@
-import { Templates } from '@/common'
+import { EmailTemplates } from '@/common'
 import { MailerService } from '@app/mailer'
 import { PrismaService } from '@app/prisma'
 import { Injectable, NotFoundException } from '@nestjs/common'
@@ -25,7 +25,7 @@ export class PasswordService {
 		const code = uuid()
 
 		const link = this.config.get('CLIENT_URL') + `/update-password?code=${code}`
-		const html = await this.mailer.getHTML(Templates.RESET_PASSWORD, { link })
+		const html = await this.mailer.getHTML(EmailTemplates.RESET_PASSWORD, { link })
 
 		await this.prisma.passwordResetLink.deleteMany({
 			where: {
