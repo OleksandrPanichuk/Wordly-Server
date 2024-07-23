@@ -47,9 +47,9 @@ export class UpdateBillingInfoInput
 	readonly lastName?: string
 
 	@IsOptional()
-	@IsNumber()
-	@IsPositive()
-	readonly phoneNumber?: number
+	@IsString()
+	@IsNotEmpty()
+	readonly phoneNumber?: string
 
 	@IsOptional()
 	@IsNotEmpty()

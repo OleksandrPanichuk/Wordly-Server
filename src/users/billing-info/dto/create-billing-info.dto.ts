@@ -39,9 +39,9 @@ export class CreateBillingInfoInput
 	@MinLength(3)
 	readonly lastName: string
 
-	@IsNumber()
-	@IsPositive()
-	readonly phoneNumber: number
+	@IsNotEmpty()
+	@IsString()
+	readonly phoneNumber: string
 
 	@IsNotEmpty()
 	@IsString()

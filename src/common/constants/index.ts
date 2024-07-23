@@ -1,6 +1,4 @@
-export enum Templates {
-	RESET_PASSWORD = 'reset-password.template.hbs'
-}
+
 
 export const SESSION_NAME = 'wordly:session'
 

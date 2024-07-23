@@ -1,14 +1,18 @@
 import { generateErrorResponse } from '@/common'
 import { PrismaService } from '@app/prisma'
 import { createCheckout } from '@lemonsqueezy/lemonsqueezy.js'
+import { CACHE_MANAGER } from '@nestjs/cache-manager'
 import {
 	BadRequestException,
+	Inject,
 	Injectable,
 	InternalServerErrorException,
 	NotFoundException
 } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
-import { User } from '@prisma/client'
+import { Subscriptions, User } from '@prisma/client'
+import { Cache } from 'cache-manager'
+import { getCode } from 'country-list'
 import { createHmac, timingSafeEqual } from 'crypto'
 import { GetSubscriptionInput, SubscribeInput } from './subscription.dto'
 import {
@@ -23,8 +27,36 @@ const APPROXIMATELY_3_MONTHS_IN_ML = 6_912_000_000
 export class SubscriptionService {
 	constructor(
 		private readonly prisma: PrismaService,
-		private readonly config: ConfigService
+		private readonly config: ConfigService,
+		@Inject(CACHE_MANAGER) private readonly cache: Cache
 	) {}
+
+	public async get(userId: string) {
+		try {
+			const cachedSubscription = await this.cache.get<Subscriptions>(
+				`subscription:${userId}`
+			)
+
+			if (cachedSubscription) {
+				return cachedSubscription
+			}
+
+			const subscription = await this.prisma.subscriptions.findUnique({
+				where: {
+					userId
+				}
+			})
+			if (!subscription) {
+				throw new NotFoundException('Subscription not found')
+			}
+
+			await this.cache.set(`subscription:${userId}`, subscription)
+
+			return subscription
+		} catch (err) {
+			throw generateErrorResponse(err)
+		}
+	}
 
 	public async checkout(dto: SubscribeInput, user: User) {
 		try {
@@ -43,11 +75,11 @@ export class SubscriptionService {
 				dto.productId,
 				{
 					checkoutData: {
-						email: billingInfo?.email ?? user.email,
+						email: billingInfo.email ?? user.email,
 						name: `${billingInfo.firstName} ${billingInfo.lastName}`,
 						billingAddress: {
-							country: billingInfo.country as any,
-							zip: billingInfo.postalCode,
+							country: getCode(billingInfo.country) as any,
+							zip: billingInfo.postalCode
 						},
 						custom: {
 							userId: user.id
@@ -150,6 +182,7 @@ export class SubscriptionService {
 				lsSubscriptionId: event.data.id
 			}
 		})
+		await this.cache.del(`subscription:${event.meta.custom_data.user_id}`)
 	}
 
 	public async createPayment(event: TypeInvoiceEvent) {

@@ -1,6 +1,7 @@
 import {
 	Body,
 	Controller,
+	Get,
 	Headers,
 	Post,
 	RawBody,
@@ -29,6 +30,13 @@ export class SubscriptionController {
 		lemonSqueezySetup({
 			apiKey: config.get('LEMON_SQUEEZY_API_KEY')
 		})
+	}
+
+	
+	@UseGuards(AuthenticatedGuard)
+	@Get()
+	getSubscription(@CurrentUser('id') userId:string) {
+		return this.subscriptionService.get(userId)
 	}
 
 	@UseGuards(AuthenticatedGuard)
@@ -82,5 +90,3 @@ export class SubscriptionController {
 		}
 	}
 }
-
-// @lemonsqueezy/lemonsqueezy.js
