@@ -10,7 +10,7 @@ export function getSessionConfig(config: ConfigService): SessionOptions {
 		resave: false,
 		saveUninitialized: false,
 		cookie: {
-			maxAge: 1000 * 60 * 60 * 24 * 7
+			maxAge: 1000 * 60 * 60 * 24 * 7,
 		},
 		name: SESSION_NAME,
 		store: new RedisStore({

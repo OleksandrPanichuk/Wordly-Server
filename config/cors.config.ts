@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config'
 
 export const getCorsConfig = (config: ConfigService): CorsOptions => ({
 	credentials: true,
-	origin: [config.get<string>('CLIENT_URL')],
-	allowedHeaders: ['X-Xsrf-Token']
+	origin: [
+		config.get<string>('CLIENT_URL'),
+	]
 })
