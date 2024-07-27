@@ -1,11 +1,11 @@
-import { STORAGE_FOLDER_NAME, TypeUploadedFile } from '@/common'
+import { STORAGE_FOLDER_NAME, UploadedFile } from '@/common'
 import { Injectable, InternalServerErrorException } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 
 import { UploadApiResponse, v2 as cloudinary } from 'cloudinary'
 
 @Injectable()
-export class StorageService {
+export class CloudinaryService {
 	private readonly cloudinary: typeof cloudinary
 
 	constructor(private readonly config: ConfigService) {
@@ -17,7 +17,7 @@ export class StorageService {
 		this.cloudinary = cloudinary
 	}
 
-	public async upload(file: Express.Multer.File): Promise<TypeUploadedFile> {
+	public async upload(file: Express.Multer.File): Promise<UploadedFile> {
 		try {
 			const uploadedFile: UploadApiResponse = await new Promise(
 				(resolve, reject) =>

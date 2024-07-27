@@ -1,11 +1,12 @@
 import { SubscriptionModule } from '@/subscription/subscription.module'
-import { StorageModule } from '@app/storage'
 import { Module } from '@nestjs/common'
 import { MeaningsController } from './meanings.controller'
 import { MeaningsService } from './meanings.service'
+import { CloudinaryModule } from '@app/cloudinary'
+
 
 @Module({
-	imports: [StorageModule, SubscriptionModule],
+	imports: [CloudinaryModule, SubscriptionModule],
 	controllers: [MeaningsController],
 	providers: [MeaningsService]
 })

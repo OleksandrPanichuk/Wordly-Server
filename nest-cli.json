@@ -29,13 +29,13 @@
         "tsConfigPath": "libs/mailer/tsconfig.lib.json"
       }
     },
-    "storage": {
+    "cloudinary": {
       "type": "library",
-      "root": "libs/storage",
+      "root": "libs/cloudinary",
       "entryFile": "index",
-      "sourceRoot": "libs/storage/src",
+      "sourceRoot": "libs/cloudinary/src",
       "compilerOptions": {
-        "tsConfigPath": "libs/storage/tsconfig.lib.json"
+        "tsConfigPath": "libs/cloudinary/tsconfig.lib.json"
       }
     }
   }

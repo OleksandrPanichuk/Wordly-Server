@@ -14,10 +14,10 @@ export class MailerService {
 
 	constructor(private config: ConfigService) {
 		this.transporter = createTransport({
-			// @ts-expect-error sth with transporter
+			
 			host: config.get('MAIL_HOST'),
 			secure: true,
-			port: config.get<string>('MAIL_PORT'),
+			port: parseInt(config.get<string>('MAIL_PORT') ?? ''),
 			auth: {
 				user: config.get<string>('MAIL_USER'),
 				pass: config.get<string>('MAIL_PASSWORD')

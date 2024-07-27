@@ -15,6 +15,7 @@ import { SetsModule } from './sets/sets.module'
 import { PacksModule } from './packs/packs.module'
 import { ListsModule } from './lists/lists.module'
 import { MulterModule } from '@nestjs/platform-express'
+import { StorageModule } from './storage/storage.module';
 
 @Module({
 	imports: [
@@ -42,7 +43,8 @@ import { MulterModule } from '@nestjs/platform-express'
 		BookmarksModule,
 		SetsModule,
 		PacksModule,
-		ListsModule
+		ListsModule,
+		StorageModule
 	]
 })
 export class AppModule {}

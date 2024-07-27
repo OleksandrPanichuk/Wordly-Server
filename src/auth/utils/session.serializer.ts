@@ -1,7 +1,7 @@
 import { UsersService } from '@/users/users.service'
+import { UserWithoutHash } from '@/users/users.types'
 import { Injectable } from '@nestjs/common'
 import { PassportSerializer } from '@nestjs/passport'
-import { User } from '@prisma/client'
 
 @Injectable()
 export class SessionSerializer extends PassportSerializer {
@@ -9,7 +9,10 @@ export class SessionSerializer extends PassportSerializer {
 		super()
 	}
 
-	serializeUser(user: User, done: (err: unknown, userId: string) => void) {
+	serializeUser(
+		user: UserWithoutHash,
+		done: (err: unknown, userId: string) => void
+	) {
 		try {
 			done(null, user.id)
 		} catch (err) {
@@ -19,11 +22,10 @@ export class SessionSerializer extends PassportSerializer {
 
 	async deserializeUser(
 		userId: string,
-		done: (err: unknown, user: User) => void
+		done: (err: unknown, user: UserWithoutHash) => void
 	) {
 		try {
 			const user = await this.userService.findById(userId)
-			delete user.hash
 			done(null, user)
 		} catch (err) {
 			done(err, null)

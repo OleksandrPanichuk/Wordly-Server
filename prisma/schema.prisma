@@ -91,8 +91,8 @@ model User {
 
   avatar File?
 
-  gender         Gender?
-  nativeLanguage String?
+  gender          Gender?
+  nativeLanguages String[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -378,15 +378,15 @@ model Meanings {
 }
 
 model Comment {
-  id String @id @default(auto()) @map("_id") @db.ObjectId
+  id      String        @id @default(auto()) @map("_id") @db.ObjectId
   content String
-  likes CommentLike[]
+  likes   CommentLike[]
 
   sender   User   @relation(fields: [senderId], references: [id], onDelete: Cascade)
   senderId String @db.ObjectId
-  
-  set         Set           @relation(fields: [setId], references: [id])
-  setId       String        @db.ObjectId
+
+  set   Set    @relation(fields: [setId], references: [id])
+  setId String @db.ObjectId
 }
 
 model CommentLike {

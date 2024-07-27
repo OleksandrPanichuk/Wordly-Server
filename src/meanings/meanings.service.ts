@@ -1,7 +1,6 @@
 import { generateErrorResponse } from '@/common'
 import { SubscriptionService } from '@/subscription/subscription.service'
 import { PrismaService } from '@app/prisma'
-import { StorageService } from '@app/storage'
 import { CACHE_MANAGER } from '@nestjs/cache-manager'
 import {
 	ForbiddenException,
@@ -19,12 +18,13 @@ import {
 } from '@prisma/client'
 import { Cache } from 'cache-manager'
 import { CreateMeaningInput, GetMeaningsInput, UpdateMeaningInput } from './dto'
+import { CloudinaryService } from '@app/cloudinary'
 
 @Injectable()
 export class MeaningsService {
 	constructor(
 		private readonly prisma: PrismaService,
-		private readonly storage: StorageService,
+		private readonly cloudinary: CloudinaryService,
 		private readonly subscriptionService: SubscriptionService,
 		@Inject(CACHE_MANAGER) private readonly cache: Cache
 	) {}
@@ -133,10 +133,10 @@ export class MeaningsService {
 				}
 			}
 
-			const uploadedImage = await this.storage.upload(image)
+			const uploadedImage = await this.cloudinary.upload(image)
 
 			if (meaning.image) {
-				await this.storage.delete(meaning.image.key)
+				await this.cloudinary.delete(meaning.image.key)
 			}
 
 			const updatedMeaning = await this.prisma.meanings.update({
@@ -196,7 +196,7 @@ export class MeaningsService {
 				}
 			})
 
-			await this.storage.delete(meaning.image.key)
+			await this.cloudinary.delete(meaning.image.key)
 
 			await this.clearCachedMeanings()
 
