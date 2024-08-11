@@ -9,7 +9,6 @@ import {
 } from '@nestjs/common'
 import { User } from '@prisma/client'
 import * as bcrypt from 'bcrypt'
-import { compare } from 'bcrypt'
 import { SignInInput, SignUpInput } from './dto'
 
 @Injectable()
@@ -55,7 +54,7 @@ export class AuthService {
 
 			if (!user) throw new NotFoundException('Invalid email or password')
 
-			const isPasswordMatchHash = await compare(dto.password, user.hash)
+			const isPasswordMatchHash = await bcrypt.compare(dto.password, user.hash)
 
 			if (!isPasswordMatchHash)
 				throw new ForbiddenException('Invalid email or password')
@@ -77,8 +76,7 @@ export class AuthService {
 
 			const user = await this.prisma.user.findFirst({
 				where: {
-					email: input.email,
-					username: input.username
+					email: input.email
 				}
 			})
 

@@ -20,6 +20,7 @@ enum Mode {
 enum Gender {
   MALE
   FEMALE
+  OTHER
 }
 
 enum LearnType {
@@ -91,8 +92,8 @@ model User {
 
   avatar File?
 
-  gender          Gender?
-  nativeLanguages String[]
+  gender         Gender?
+  nativeLanguage String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

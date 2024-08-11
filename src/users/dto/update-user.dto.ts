@@ -1,7 +1,6 @@
 import { UploadedFile } from '@/common'
 import { Gender, Prisma } from '@prisma/client'
 import {
-	IsArray,
 	IsEnum,
 	IsNotEmpty,
 	IsOptional,
@@ -20,10 +19,8 @@ export class UpdateUserInput implements Prisma.UserUpdateInput {
 	readonly gender?: Gender
 
 	@IsOptional()
-	@IsNotEmpty({ each: true })
-	@IsString({ each: true })
-	@IsArray()
-	readonly nativeLanguage?: string[]
+	@IsString()
+	readonly nativeLanguage?: string
 
 	@IsOptional()
 	@ValidateNested()

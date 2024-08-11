@@ -1,8 +1,8 @@
 import { AuthenticatedGuard, CurrentUser } from '@/common'
-import { Body, Controller, Get, Patch, UseGuards } from '@nestjs/common'
+import { Body, Controller, Delete, Get, Patch, UseGuards } from '@nestjs/common'
 import { User } from '@prisma/client'
-import { UsersService } from './users.service'
 import { UpdateUserInput } from './dto'
+import { UsersService } from './users.service'
 
 @UseGuards(AuthenticatedGuard)
 @Controller('users')
@@ -18,5 +18,10 @@ export class UsersController {
 	@Patch('current')
 	updateUser(@CurrentUser('id') userId: string, @Body() dto: UpdateUserInput) {
 		return this.usersService.update(dto, userId)
+	}
+
+	@Delete('current')
+	deleteUser(@CurrentUser() user: User) {
+		return this.usersService.delete(user)
 	}
 }

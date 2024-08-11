@@ -6,11 +6,14 @@ import { Cache } from 'cache-manager'
 import { omit } from 'lodash'
 import { UpdateUserInput } from './dto'
 import { UserWithoutHash } from './users.types'
+import { User } from '@prisma/client'
+import { CloudinaryService } from '@app/cloudinary'
 
 @Injectable()
 export class UsersService {
 	constructor(
 		private readonly prisma: PrismaService,
+		private readonly cloudinary: CloudinaryService,
 		@Inject(CACHE_MANAGER) private readonly cache: Cache
 	) {}
 
@@ -37,7 +40,6 @@ export class UsersService {
 
 			return omit(user, 'hash')
 		} catch (err) {
-			console.log(err)
 			throw generateErrorResponse(err)
 		}
 	}
@@ -58,6 +60,25 @@ export class UsersService {
 			return omit(user, 'hash')
 		} catch (err) {
 			throw generateErrorResponse(err)
+		}
+	}
+
+
+	public async delete(user: User) {
+		try {
+			await this.prisma.user.delete({
+				where: {
+					id: user.id
+				}
+			})
+
+			await this.cache.del(`user:${user.id}`)
+
+			if(user.avatar.key) {
+				await this.cloudinary.delete(user.avatar.key)
+			}
+		} catch (err) {
+			throw generateErrorResponse(err) 	
 		}
 	}
 }

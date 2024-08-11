@@ -1,4 +1,5 @@
 import { UsersService } from '@/users/users.service'
+import { CloudinaryModule } from '@app/cloudinary'
 import { Module } from '@nestjs/common'
 import { PassportModule } from '@nestjs/passport'
 import { AuthController } from './auth.controller'
@@ -9,7 +10,11 @@ import { GoogleStrategy } from './strategy/google.strategy'
 import { SessionSerializer } from './utils/session.serializer'
 
 @Module({
-	imports: [PassportModule.register({ session: true }), PasswordModule],
+	imports: [
+		PassportModule.register({ session: true }),
+		PasswordModule,
+		CloudinaryModule
+	],
 	providers: [
 		AuthService,
 		SessionSerializer,
