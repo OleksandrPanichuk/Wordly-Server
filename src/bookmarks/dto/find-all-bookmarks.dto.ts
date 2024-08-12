@@ -1,7 +1,7 @@
 import { BookmarkType } from '@prisma/client'
 import { IsEnum, IsNumber, IsOptional, IsPositive } from 'class-validator'
 
-export class GetAllBookmarksInput {
+export class FindAllBookmarksInput {
 	@IsEnum(BookmarkType)
 	readonly type: BookmarkType
 

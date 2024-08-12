@@ -18,7 +18,7 @@ export class SubscribedGuard implements CanActivate
 
 		const user = req.user as User
 
-		const subscription = await prisma.subscriptions.findUnique({
+		const subscription = await prisma.subscription.findUnique({
 			where: {
 				userId: user.id
 			}
@@ -29,7 +29,7 @@ export class SubscribedGuard implements CanActivate
 		}
 
 		if (Date.now() > subscription.endsAt.getTime()) {
-			await prisma.subscriptions.delete({
+			await prisma.subscription.delete({
 				where: {
 					id: subscription.id
 				}

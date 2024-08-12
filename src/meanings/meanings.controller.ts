@@ -19,7 +19,7 @@ import {
 	UseGuards,
 	UseInterceptors
 } from '@nestjs/common'
-import { CreateMeaningInput, GetMeaningsInput, UpdateMeaningInput } from './dto'
+import { CreateMeaningInput, FindAllMeaningsInput, UpdateMeaningInput } from './dto'
 import { MeaningsService } from './meanings.service'
 
 import { FileInterceptor } from '@nestjs/platform-express'
@@ -30,8 +30,8 @@ export class MeaningsController {
 	constructor(private readonly meaningsService: MeaningsService) {}
 
 	@Get()
-	getMeanings(@Query() dto: GetMeaningsInput) {
-		return this.meaningsService.get(dto)
+	getMeanings(@Query() dto: FindAllMeaningsInput) {
+		return this.meaningsService.findAll(dto)
 	}
 
 	@UseGuards(SubscribedGuard)

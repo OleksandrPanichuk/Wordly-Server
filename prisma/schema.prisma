@@ -63,6 +63,13 @@ enum BookmarkType {
   SET
 }
 
+enum LikeType {
+  COMMENT
+  PACK
+  SET
+  LIST
+}
+
 enum ExpressionType {
   COLLOCATION
   IDIOM
@@ -99,7 +106,7 @@ model User {
   updatedAt DateTime @updatedAt
 
   billingInfo  BillingInfo?
-  subscription Subscriptions?
+  subscription Subscription?
 
   passwordResetLink PasswordResetLink[]
   trainingSessions  TrainingSession[]
@@ -108,7 +115,8 @@ model User {
   createdMeanings   Meanings[]
   createdWords      Word[]
   comments          Comment[]
-  commentLikes      CommentLike[]
+  likes             Like[]
+  payments          Payment[]
 }
 
 model PasswordResetLink {
@@ -141,28 +149,29 @@ model BillingInfo {
   userId String @unique @db.ObjectId
 }
 
-model Subscriptions {
+model Subscription {
   id String @id @default(auto()) @map("_id") @db.ObjectId
 
   lsSubscriptionId String @unique
-  productId        Int
 
   endsAt    DateTime?
   createdAt DateTime  @default(now())
 
   userId String @unique @db.ObjectId
-  user   User   @relation(fields: [userId], references: [id])
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   isUnlimite Boolean @default(false)
 
-  payments Payments[]
+  payments Payment[]
 }
 
-model Payments {
+model Payment {
   id String @id @default(auto()) @map("_id") @db.ObjectId
 
-  subscription   Subscriptions? @relation(fields: [subscriptionId], references: [id])
-  subscriptionId String?        @db.ObjectId
+  subscription   Subscription? @relation(fields: [subscriptionId], references: [id], onDelete: SetNull)
+  subscriptionId String?       @db.ObjectId
+
+  lsSubscriptionId String
 
   billingReason BillingReason
 
@@ -171,6 +180,9 @@ model Payments {
   total    Int
 
   createdAt DateTime @default(now())
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String @db.ObjectId
 }
 
 // Bookmarks
@@ -203,6 +215,7 @@ model Pack {
 
   sets      PackToSet[]
   bookmarks Bookmarks[]
+  likes     Like[]
 }
 
 model PackToSet {
@@ -248,6 +261,7 @@ model Set {
 
   bokmarks Bookmarks[]
   comments Comment[]
+  likes    Like[]
 }
 
 model ListToSet {
@@ -278,6 +292,7 @@ model List {
 
   bookmarks    Bookmarks[]
   allowedUsers AllowedUser[]
+  likes        Like[]
 }
 
 model WordToList {
@@ -379,9 +394,9 @@ model Meanings {
 }
 
 model Comment {
-  id      String        @id @default(auto()) @map("_id") @db.ObjectId
+  id      String @id @default(auto()) @map("_id") @db.ObjectId
   content String
-  likes   CommentLike[]
+  likes   Like[]
 
   sender   User   @relation(fields: [senderId], references: [id], onDelete: Cascade)
   senderId String @db.ObjectId
@@ -390,12 +405,23 @@ model Comment {
   setId String @db.ObjectId
 }
 
-model CommentLike {
+model Like {
   id String @id @default(auto()) @map("_id") @db.ObjectId
 
   user   User   @relation(fields: [userId], references: [id])
   userId String @db.ObjectId
 
-  comment   Comment @relation(fields: [commentId], references: [id])
-  commentId String  @db.ObjectId
+  type LikeType
+
+  comment   Comment? @relation(fields: [commentId], references: [id])
+  commentId String?  @db.ObjectId
+
+  list   List?   @relation(fields: [listId], references: [id])
+  listId String? @db.ObjectId
+
+  pack   Pack?   @relation(fields: [packId], references: [id])
+  packId String? @db.ObjectId
+
+  set   Set?    @relation(fields: [setId], references: [id])
+  setId String? @db.ObjectId
 }

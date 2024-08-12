@@ -32,10 +32,9 @@ export class SubscriptionController {
 		})
 	}
 
-	
 	@UseGuards(AuthenticatedGuard)
 	@Get()
-	getSubscription(@CurrentUser('id') userId:string) {
+	getSubscription(@CurrentUser('id') userId: string) {
 		return this.subscriptionService.get(userId)
 	}
 

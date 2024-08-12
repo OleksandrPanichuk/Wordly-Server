@@ -1,5 +1,6 @@
 import { generateErrorResponse } from '@/common'
 import { SubscriptionService } from '@/subscription/subscription.service'
+import { CloudinaryService } from '@app/cloudinary'
 import { PrismaService } from '@app/prisma'
 import { CACHE_MANAGER } from '@nestjs/cache-manager'
 import {
@@ -17,8 +18,11 @@ import {
 	UserRole
 } from '@prisma/client'
 import { Cache } from 'cache-manager'
-import { CreateMeaningInput, GetMeaningsInput, UpdateMeaningInput } from './dto'
-import { CloudinaryService } from '@app/cloudinary'
+import {
+	CreateMeaningInput,
+	FindAllMeaningsInput,
+	UpdateMeaningInput
+} from './dto'
 
 @Injectable()
 export class MeaningsService {
@@ -29,7 +33,7 @@ export class MeaningsService {
 		@Inject(CACHE_MANAGER) private readonly cache: Cache
 	) {}
 
-	public async get(dto: GetMeaningsInput) {
+	public async findAll(dto: FindAllMeaningsInput) {
 		try {
 			const cacheKey = 'meanings:' + JSON.stringify(dto)
 

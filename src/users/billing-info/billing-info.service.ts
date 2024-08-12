@@ -19,7 +19,7 @@ export class BillingInfoService {
 		@Inject(CACHE_MANAGER) private readonly cache: Cache
 	) {}
 
-	public async get(userId: string) {
+	public async findByUserId(userId: string) {
 		try {
 			const cachedBillingInfo = await this.cache.get<BillingInfo>(`billing-info:${userId}`)
 

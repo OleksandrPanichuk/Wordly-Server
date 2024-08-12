@@ -1,7 +1,7 @@
 import { LearnType, PartOfSpeech } from '@prisma/client'
 import { IsEnum, IsMongoId, IsOptional } from 'class-validator'
 
-export class GetMeaningsInput {
+export class FindAllMeaningsInput {
 	@IsOptional()
 	@IsEnum(PartOfSpeech)
 	readonly partOfSpeech?: PartOfSpeech

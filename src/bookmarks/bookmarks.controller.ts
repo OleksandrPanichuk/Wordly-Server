@@ -10,7 +10,7 @@ import {
 	UseGuards
 } from '@nestjs/common'
 import { BookmarksService } from './bookmarks.service'
-import { CreateBookmarkInput, GetAllBookmarksInput } from './dto'
+import { CreateBookmarkInput, FindAllBookmarksInput } from './dto'
 
 @UseGuards(AuthenticatedGuard)
 @Controller('bookmarks')
@@ -19,10 +19,10 @@ export class BookmarksController {
 
 	@Get()
 	getAllBookmarks(
-		@Query() dto: GetAllBookmarksInput,
+		@Query() dto: FindAllBookmarksInput,
 		@CurrentUser('id') userId: string
 	) {
-		return this.bookmarksService.getAll(dto, userId)
+		return this.bookmarksService.findAll(dto, userId)
 	}
 
 	@Post()

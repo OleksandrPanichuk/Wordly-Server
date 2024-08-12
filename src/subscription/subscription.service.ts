@@ -1,6 +1,6 @@
 import { generateErrorResponse } from '@/common'
 import { PrismaService } from '@app/prisma'
-import { createCheckout } from '@lemonsqueezy/lemonsqueezy.js'
+import { createCheckout, getSubscription, NewCheckout } from '@lemonsqueezy/lemonsqueezy.js'
 import { CACHE_MANAGER } from '@nestjs/cache-manager'
 import {
 	BadRequestException,
@@ -10,16 +10,18 @@ import {
 	NotFoundException
 } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
-import { Subscriptions, User } from '@prisma/client'
+import { Subscription, User } from '@prisma/client'
 import { Cache } from 'cache-manager'
-import { getCode} from 'country-list'
 import { createHmac, timingSafeEqual } from 'crypto'
+import { PaymentsService } from './payments/payments.service'
 import { GetSubscriptionInput, SubscribeInput } from './subscription.dto'
 import {
 	TypeEvent,
 	TypeInvoiceEvent,
 	TypeOrderEvent
 } from './subscription.types'
+
+type CountryCode = NewCheckout['checkoutData']['billingAddress']['country']
 
 const APPROXIMATELY_3_MONTHS_IN_ML = 6_912_000_000
 
@@ -28,12 +30,13 @@ export class SubscriptionService {
 	constructor(
 		private readonly prisma: PrismaService,
 		private readonly config: ConfigService,
+		private readonly paymentsService: PaymentsService,
 		@Inject(CACHE_MANAGER) private readonly cache: Cache
 	) {}
 
 	public async get(userId: string) {
 		try {
-			const cachedSubscription = await this.cache.get<Subscriptions>(
+			const cachedSubscription = await this.cache.get<Subscription>(
 				`subscription:${userId}`
 			)
 
@@ -41,7 +44,7 @@ export class SubscriptionService {
 				return cachedSubscription
 			}
 
-			const subscription = await this.prisma.subscriptions.findUnique({
+			const subscription = await this.prisma.subscription.findUnique({
 				where: {
 					userId
 				}
@@ -78,7 +81,7 @@ export class SubscriptionService {
 						email: billingInfo.email ?? user.email,
 						name: `${billingInfo.firstName} ${billingInfo.lastName}`,
 						billingAddress: {
-							country: getCode(billingInfo.country) as any,
+							country: billingInfo.country as CountryCode,
 							zip: billingInfo.postalCode
 						},
 						custom: {
@@ -115,7 +118,7 @@ export class SubscriptionService {
 	}
 
 	public async getSubscription(dto: GetSubscriptionInput) {
-		const subscription = await this.prisma.subscriptions.findUnique({
+		const subscription = await this.prisma.subscription.findUnique({
 			where: {
 				userId: dto.userId
 			}
@@ -139,10 +142,9 @@ export class SubscriptionService {
 			throw new NotFoundException('User not found')
 		}
 
-		await this.prisma.subscriptions.create({
+		await this.prisma.subscription.create({
 			data: {
 				userId: user.id,
-				productId: event.data.attributes.variant_id,
 				lsSubscriptionId: event.data.id,
 				createdAt: event.data.attributes.created_at,
 				endsAt: event.data.attributes.ends_at ?? event.data.attributes.renews_at
@@ -164,7 +166,7 @@ export class SubscriptionService {
 			endsAtMiliSec - subscription.endsAt.getTime() >=
 				APPROXIMATELY_3_MONTHS_IN_ML
 		) {
-			await this.prisma.subscriptions.update({
+			await this.prisma.subscription.update({
 				where: {
 					id: subscription.id
 				},
@@ -176,7 +178,7 @@ export class SubscriptionService {
 	}
 
 	public async deleteSubscription(event: TypeEvent) {
-		await this.prisma.subscriptions.delete({
+		await this.prisma.subscription.delete({
 			where: {
 				userId: event.meta.custom_data.user_id,
 				lsSubscriptionId: event.data.id
@@ -186,66 +188,72 @@ export class SubscriptionService {
 	}
 
 	public async createPayment(event: TypeInvoiceEvent) {
+		const userId = event.meta.custom_data.user_id
 		const subscription = await this.getSubscription({
-			userId: event.meta.custom_data.user_id
+			userId
 		})
 
-		const { billing_reason, subtotal, tax, total, status } =
-			event.data.attributes
+		const {
+			billing_reason,
+			subtotal,
+			tax,
+			total,
+			status,
+		} = event.data.attributes
 
 		if (status !== 'paid') {
 			console.error('Payment status is not "paid":', status)
 			throw new BadRequestException('Invalid payment status')
 		}
 
-		await this.prisma.payments.create({
-			data: {
-				billingReason: billing_reason,
-				subtotal,
-				tax,
-				total,
-				subscriptionId: subscription.id
-			}
+		await this.paymentsService.create({
+			billingReason: billing_reason,
+			subtotal,
+			tax,
+			total,
+			subscriptionId: subscription.id,
+			userId,
+			lsSubscriptionId: event.data.id,
 		})
 	}
 
 	public async createUnlimiteSubscription(event: TypeOrderEvent) {
+		const userId = event.meta.custom_data.user_id
 		const existingSubscription = await this.getSubscription({
-			userId: event.meta.custom_data.user_id
+			userId
 		})
 
 		if (existingSubscription) {
-			await this.prisma.subscriptions.delete({
+			await this.prisma.subscription.delete({
 				where: {
 					id: existingSubscription.id
 				}
 			})
 		}
 
-		const newSubscription = await this.prisma.subscriptions.create({
+		const newSubscription = await this.prisma.subscription.create({
 			data: {
 				isUnlimite: true,
 				lsSubscriptionId: event.data.id,
-				productId: event.data.attributes.first_order_item.variant_id,
 				userId: event.meta.custom_data.user_id
 			}
 		})
 
 		const { subtotal, tax, total } = event.data.attributes
 
-		await this.prisma.payments.create({
-			data: {
-				billingReason: 'initial',
-				subtotal,
-				tax,
-				total,
-				subscriptionId: newSubscription.id
-			}
+		await this.paymentsService.create({
+			billingReason: 'initial',
+			subtotal,
+			tax,
+			total,
+			subscriptionId: newSubscription.id,
+			userId,
+			lsSubscriptionId: event.data.id
 		})
 	}
 
 	public async checkIfSubscribed(userId: string): Promise<boolean> {
-		const subscription = await this.prisma.subscriptions.findUnique({
+		const subscription = await this.prisma.subscription.findUnique({
 			where: {
 				userId
 			}
@@ -256,7 +264,7 @@ export class SubscriptionService {
 		}
 
 		if (Date.now() > subscription.endsAt.getTime()) {
-			await this.prisma.subscriptions.delete({
+			await this.prisma.subscription.delete({
 				where: {
 					id: subscription.id
 				}

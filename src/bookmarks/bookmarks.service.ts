@@ -2,13 +2,13 @@ import { generateErrorResponse } from '@/common'
 import { PrismaService } from '@app/prisma'
 import { Injectable } from '@nestjs/common'
 import { BookmarkType } from '@prisma/client'
-import { CreateBookmarkInput, GetAllBookmarksInput } from './dto'
+import { CreateBookmarkInput, FindAllBookmarksInput } from './dto'
 
 @Injectable()
 export class BookmarksService {
 	constructor(private readonly prisma: PrismaService) {}
 
-	public async getAll(dto: GetAllBookmarksInput, userId: string) {
+	public async findAll(dto: FindAllBookmarksInput, userId: string) {
 		try {
 			return await this.prisma.bookmarks.findMany({
 				where: {
