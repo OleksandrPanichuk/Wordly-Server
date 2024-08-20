@@ -1,11 +1,34 @@
 import { AdminGuard, CurrentUser, SubscribedGuard } from '@/common'
-import { Body, Controller, Post, UseGuards } from '@nestjs/common'
-import { CreateWordInput } from './dto'
+import {
+	Body,
+	Controller,
+	Get,
+	Post,
+	Query,
+	UseGuards,
+	ValidationPipe
+} from '@nestjs/common'
+import { CreateWordInput, FindManyWordsInput } from './dto'
 import { WordsService } from './words.service'
 
 @Controller('words')
 export class WordsController {
 	constructor(private readonly wordsService: WordsService) {}
+
+	@Get()
+	findMany(
+		@Query(
+			new ValidationPipe({
+				transform: true,
+				transformOptions: {
+					enableImplicitConversion: true
+				}
+			})
+		)
+		dto: FindManyWordsInput
+	) {
+		return this.wordsService.findMany(dto)
+	}
 
 	@UseGuards(SubscribedGuard)
 	@Post()

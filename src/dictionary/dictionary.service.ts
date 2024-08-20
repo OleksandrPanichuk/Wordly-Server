@@ -5,7 +5,11 @@ import { Injectable, NotFoundException } from '@nestjs/common'
 import { PartOfSpeech } from '@prisma/client'
 import { firstValueFrom } from 'rxjs'
 import { v4 as uuid } from 'uuid'
-import { GetWordByNameInput, GetWordByNameResponse } from './dictionary.dto'
+import {
+	GetWordByNameInput,
+	GetWordByNameResponse,
+	SearchWordsInput
+} from './dictionary.dto'
 import {
 	TypeDictionaryNotFound,
 	TypeDictionaryWord,
@@ -19,14 +23,26 @@ export class DictionaryService {
 		private readonly httpService: HttpService
 	) {}
 
-	public async searchWords(query: string) {
+	public async searchWords(input: SearchWordsInput) {
+		const { q, cursor, take } = input
+
+		const wordFromDictionary = await this.fetchWordFromDictionary(q)
+
+		const limit = take ?? (Array.isArray(wordFromDictionary) ? 39 : 40)
+
 		const usersWords = await this.prisma.word.findMany({
 			where: {
 				name: {
-					contains: query,
+					contains: q,
 					mode: 'insensitive'
 				}
 			},
+			take: cursor ? limit + 1 : limit,
+			cursor: cursor
+				? {
+						id: cursor
+					}
+				: undefined,
 			include: {
 				meanings: {
 					select: {
@@ -42,7 +58,12 @@ export class DictionaryService {
 			}
 		})
 
-		const wordFromDictionary = await this.fetchWordFromDictionary(query)
+		let nextCursor: typeof cursor | undefined = undefined
+
+		if (usersWords.length > limit) {
+			const nextItem = usersWords.pop()
+			nextCursor = nextItem!.id
+		}
 
 		const words: TypeSearchDictionaryWord[] = []
 
@@ -55,6 +76,9 @@ export class DictionaryService {
 		}
 
 		for (const word of usersWords) {
+			if (words.some((el) => el.name === word.name)) {
+				continue
+			}
 			words.push({
 				id: word.id,
 				name: word.name,
@@ -63,7 +87,10 @@ export class DictionaryService {
 			})
 		}
 
-		return words
+		return {
+			words,
+			nextCursor
+		}
 	}
 
 	public async getWordByName({

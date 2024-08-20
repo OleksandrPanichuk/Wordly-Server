@@ -1,6 +1,6 @@
 import { generateErrorResponse } from '@/common'
 import { PrismaService } from '@app/prisma'
-import { createCheckout, getSubscription, NewCheckout } from '@lemonsqueezy/lemonsqueezy.js'
+import { createCheckout, NewCheckout } from '@lemonsqueezy/lemonsqueezy.js'
 import { CACHE_MANAGER } from '@nestjs/cache-manager'
 import {
 	BadRequestException,
@@ -193,13 +193,8 @@ export class SubscriptionService {
 			userId
 		})
 
-		const {
-			billing_reason,
-			subtotal,
-			tax,
-			total,
-			status,
-		} = event.data.attributes
+		const { billing_reason, subtotal, tax, total, status } =
+			event.data.attributes
 
 		if (status !== 'paid') {
 			console.error('Payment status is not "paid":', status)
@@ -208,12 +203,12 @@ export class SubscriptionService {
 
 		await this.paymentsService.create({
 			billingReason: billing_reason,
-			subtotal,
-			tax,
-			total,
+			subtotal: subtotal / 100,
+			tax: tax / 100,
+			total: total / 100,
 			subscriptionId: subscription.id,
 			userId,
-			lsSubscriptionId: event.data.id,
+			lsSubscriptionId: event.data.attributes.subscription_id.toString()
 		})
 	}
 
@@ -243,9 +238,9 @@ export class SubscriptionService {
 
 		await this.paymentsService.create({
 			billingReason: 'initial',
-			subtotal,
-			tax,
-			total,
+			subtotal: subtotal / 100,
+			tax: tax / 100,
+			total: total / 100,
 			subscriptionId: newSubscription.id,
 			userId,
 			lsSubscriptionId: event.data.id

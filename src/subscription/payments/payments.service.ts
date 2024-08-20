@@ -1,7 +1,7 @@
 import { generateErrorResponse } from '@/common'
 import { PrismaService } from '@app/prisma'
-import { Injectable } from '@nestjs/common'
-import { CreatePaymentInput, FindAllPaymentsInput } from './dto'
+import { Injectable, NotFoundException } from '@nestjs/common'
+import { CreatePaymentInput, FindAllPaymentsInput, FindByIdInput } from './dto'
 
 @Injectable()
 export class PaymentsService {
@@ -15,6 +15,22 @@ export class PaymentsService {
 			}
 		})
 	}
+	public async findById({paymentId, ...input}: FindByIdInput) {
+		const payment = await this.prisma.payment.findUnique({
+			where: {
+				...input,
+				id: paymentId
+			},
+		})
+
+		
+
+		if (!payment) {
+			throw new NotFoundException('Payment not found')
+		}
+
+		return payment
+	}
 
 	public async create(input: CreatePaymentInput) {
 		try {
@@ -25,4 +41,6 @@ export class PaymentsService {
 			throw generateErrorResponse(err)
 		}
 	}
+
+
 }

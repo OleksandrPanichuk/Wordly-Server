@@ -1,5 +1,27 @@
 import { PartOfSpeech } from '@prisma/client'
-import { IsEnum, IsNotEmpty, IsOptional, IsString } from 'class-validator'
+import { Transform } from 'class-transformer'
+import { IsEnum, IsMongoId, IsNotEmpty, IsNumber, IsOptional, IsPositive, IsString } from 'class-validator'
+
+
+
+export class SearchWordsInput {
+
+	@IsString()
+	@IsNotEmpty()
+	readonly q:string
+
+
+	@IsOptional()
+	@Transform(({value}) => value && parseInt(value))
+	@IsNumber()
+	@IsPositive()
+	readonly take?: number 
+
+
+	@IsOptional()
+	@IsMongoId()
+	readonly cursor?: string
+}
 
 export class GetWordByNameInput {
 	@IsOptional()

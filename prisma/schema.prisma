@@ -108,15 +108,19 @@ model User {
   billingInfo  BillingInfo?
   subscription Subscription?
 
-  passwordResetLink PasswordResetLink[]
-  trainingSessions  TrainingSession[]
-  bookmarks         Bookmarks[]
-  canAccess         AllowedUser[]
-  createdMeanings   Meanings[]
-  createdWords      Word[]
-  comments          Comment[]
-  likes             Like[]
-  payments          Payment[]
+  passwordResetLink  PasswordResetLink[]
+  trainingSessions   TrainingSession[]
+  bookmarks          Bookmarks[]
+  canAccess          AllowedUser[]
+  createdMeanings    Meanings[]
+  createdWords       Word[]
+  createdPacks       Pack[]
+  comments           Comment[]
+  likes              Like[]
+  payments           Payment[]
+  createdSets        Set[]
+  createdLists       List[]
+  createdExpressions Expression[]
 }
 
 model PasswordResetLink {
@@ -175,9 +179,9 @@ model Payment {
 
   billingReason BillingReason
 
-  subtotal Int
-  tax      Int
-  total    Int
+  subtotal Float
+  tax      Float
+  total    Float
 
   createdAt DateTime @default(now())
 
@@ -205,6 +209,9 @@ model Bookmarks {
 
   list   List?   @relation(fields: [listId], references: [id], onDelete: Cascade)
   listId String? @db.ObjectId
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
 }
 
 model Pack {
@@ -216,6 +223,12 @@ model Pack {
   sets      PackToSet[]
   bookmarks Bookmarks[]
   likes     Like[]
+
+  creatorId String? @db.ObjectId
+  creator   User?   @relation(fields: [creatorId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
 }
 
 model PackToSet {
@@ -262,6 +275,12 @@ model Set {
   bokmarks Bookmarks[]
   comments Comment[]
   likes    Like[]
+
+  creator   User?   @relation(fields: [creatorId], references: [id], onDelete: SetNull)
+  creatorId String? @db.ObjectId
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
 }
 
 model ListToSet {
@@ -293,6 +312,12 @@ model List {
   bookmarks    Bookmarks[]
   allowedUsers AllowedUser[]
   likes        Like[]
+
+  creator   User?   @relation(fields: [creatorId], references: [id], onDelete: SetNull)
+  creatorId String? @db.ObjectId
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
 }
 
 model WordToList {
@@ -333,6 +358,9 @@ model TrainingSession {
   listId String @db.ObjectId
 
   type TrainingType
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
 }
 
 // Word and Expression models
@@ -351,6 +379,12 @@ model Expression {
   partsOfSpeech PartOfSpeech[]
   meanings      Meanings[]
   lists         ExpressionToList[]
+
+  creator   User?   @relation(fields: [creatorId], references: [id], onDelete: SetNull)
+  creatorId String? @db.ObjectId
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
 }
 
 model Word {
@@ -368,6 +402,9 @@ model Word {
 
   creator   User?   @relation(fields: [creatorId], references: [id], onDelete: SetNull)
   creatorId String? @db.ObjectId
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
 }
 
 model Meanings {
@@ -391,6 +428,9 @@ model Meanings {
 
   creator   User?   @relation(fields: [creatorId], references: [id], onDelete: SetNull)
   creatorId String? @db.ObjectId
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
 }
 
 model Comment {

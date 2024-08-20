@@ -5,7 +5,11 @@ export enum PrismaClientErrorCodes {
 	VALIDATION_ERROR = 'P2007'
 }
 
-
 export enum EmailTemplates {
 	RESET_PASSWORD = 'reset-password.template.hbs'
+}
+
+export enum SortOrder {
+	ASC = 'asc',
+	DESC = 'desc'
 }
