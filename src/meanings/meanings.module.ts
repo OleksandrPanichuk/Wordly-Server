@@ -8,6 +8,7 @@ import { CloudinaryModule } from '@app/cloudinary'
 @Module({
 	imports: [CloudinaryModule, SubscriptionModule],
 	controllers: [MeaningsController],
-	providers: [MeaningsService]
+	providers: [MeaningsService],
+	exports: [MeaningsService]
 })
 export class MeaningsModule {}

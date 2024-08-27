@@ -20,6 +20,7 @@ import {
 import { Cache } from 'cache-manager'
 import {
 	CreateMeaningInput,
+	CreateWordMeaningInput,
 	FindAllMeaningsInput,
 	UpdateMeaningInput
 } from './dto'
@@ -99,6 +100,20 @@ export class MeaningsService {
 		} catch (err) {
 			throw generateErrorResponse(err)
 		}
+	}
+
+	public async createWordMeaning(dto: CreateWordMeaningInput, userId?: string) {
+		await this.updatePartsOfSpeech(
+			dto.wordId,
+			dto.partOfSpeech,
+			LearnType.VOCABULARY
+		)
+		return await this.prisma.meanings.create({
+			data: {
+				...dto,
+				creatorId: userId
+			}
+		})
 	}
 
 	public async updateMeaningImage(

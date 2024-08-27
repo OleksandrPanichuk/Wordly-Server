@@ -3,12 +3,13 @@ import {
 	Body,
 	Controller,
 	Get,
+	Param,
 	Post,
 	Query,
 	UseGuards,
 	ValidationPipe
 } from '@nestjs/common'
-import { CreateWordInput, FindManyWordsInput } from './dto'
+import { CreateWordInput, FindManyWordsInput, FindWordByNameInput } from './dto'
 import { WordsService } from './words.service'
 
 @Controller('words')
@@ -29,6 +30,12 @@ export class WordsController {
 	) {
 		return this.wordsService.findMany(dto)
 	}
+
+	@Get(':id')
+	findById() {}
+
+	@Get('/name/:name')
+	findByName(@Param() dto: FindWordByNameInput) {}
 
 	@UseGuards(SubscribedGuard)
 	@Post()

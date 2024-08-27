@@ -1,17 +1,26 @@
 import { generateErrorResponse } from '@/common'
+import { MeaningsService } from '@/meanings/meanings.service'
 import { PrismaService } from '@app/prisma'
-import { Injectable } from '@nestjs/common'
+import {
+	ConflictException,
+	Injectable,
+	NotFoundException
+} from '@nestjs/common'
 import { Prisma } from '@prisma/client'
 import {
 	CreateWordInput,
 	FindManyWordsInput,
 	FindManyWordsResponse,
+	FindWordByNameInput,
 	SortBy
 } from './dto'
 
 @Injectable()
 export class WordsService {
-	constructor(private readonly prisma: PrismaService) {}
+	constructor(
+		private readonly prisma: PrismaService,
+		private readonly meaningsService: MeaningsService
+	) {}
 
 	public async findMany(
 		dto: FindManyWordsInput
@@ -92,14 +101,59 @@ export class WordsService {
 		}
 	}
 
-	public async create(dto: CreateWordInput, userId?: string) {
+	public async findByName({ name }: FindWordByNameInput) {
 		try {
-			return await this.prisma.word.create({
-				data: {
-					...dto,
-					creatorId: userId
+			const word = await this.prisma.word.findFirst({
+				where: {
+					name: {
+						equals: name,
+						mode: 'insensitive'
+					}
 				}
 			})
+			if (!word) {
+				throw new NotFoundException()
+			}
+			return word
+		} catch (err) {
+			throw generateErrorResponse(err)
+		}
+	}
+
+	public async create({ meaning, ...dto }: CreateWordInput, userId?: string) {
+		try {
+			const existingWord = await this.prisma.word.findFirst({
+				where: {
+					name: {
+						equals: dto.name,
+						mode: 'insensitive'
+					}
+				}
+			})
+
+			if (existingWord) {
+				throw new ConflictException('Word with this name already exists')
+			}
+
+			const word = await this.prisma.word.create({
+				data: {
+					...dto,
+					creatorId: userId,
+					partsOfSpeech: []
+				}
+			})
+
+			if (meaning) {
+				await this.meaningsService.createWordMeaning(
+					{
+						...meaning,
+						wordId: word.id
+					},
+					userId
+				)
+			}
+
+			return word
 		} catch (err) {
 			throw generateErrorResponse(err)
 		}

@@ -1,8 +1,13 @@
 import { Transcription } from '@/common'
-import { PartOfSpeech, Prisma } from '@prisma/client'
-import { IsArray, IsEnum, IsNotEmpty, IsString, ValidateNested } from 'class-validator'
+import { CreateWordMeaningInput } from '@/meanings/dto'
+import {
+	IsNotEmpty,
+	IsOptional,
+	IsString,
+	ValidateNested
+} from 'class-validator'
 
-export class CreateWordInput implements Prisma.WordUncheckedCreateInput {
+export class CreateWordInput {
 	@IsNotEmpty()
 	@IsString()
 	readonly name: string
@@ -10,7 +15,7 @@ export class CreateWordInput implements Prisma.WordUncheckedCreateInput {
 	@ValidateNested()
 	readonly transcription: Transcription
 
-	@IsArray()
-	@IsEnum(PartOfSpeech, { each: true })
-	readonly partsOfSpeech?: PartOfSpeech[]
+	@IsOptional()
+	@ValidateNested()
+	readonly meaning?: Omit<CreateWordMeaningInput, 'wordId'>
 }

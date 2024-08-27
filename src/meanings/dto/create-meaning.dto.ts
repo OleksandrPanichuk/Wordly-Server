@@ -5,8 +5,10 @@ import {
 	IsMongoId,
 	IsNotEmpty,
 	IsOptional,
-	IsString
+	IsString,
+	ValidateNested
 } from 'class-validator'
+import { UploadedFile } from '@/common'
 
 export class CreateMeaningInput {
 	@IsNotEmpty()
@@ -27,4 +29,26 @@ export class CreateMeaningInput {
 	@IsString({ each: true })
 	@IsNotEmpty({ each: true })
 	readonly examples?: string[]
+}
+
+export class CreateWordMeaningInput {
+	@IsNotEmpty()
+	@IsString()
+	readonly definition: string
+
+	@IsEnum(PartOfSpeech)
+	readonly partOfSpeech: PartOfSpeech
+
+	@IsOptional()
+	@IsArray()
+	@IsString({ each: true })
+	@IsNotEmpty({ each: true })
+	readonly examples?: string[]
+
+	@IsMongoId()
+	readonly wordId: string
+
+	@IsOptional()
+	@ValidateNested()
+	readonly image?: UploadedFile
 }
