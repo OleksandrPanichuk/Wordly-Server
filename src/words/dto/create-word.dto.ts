@@ -6,10 +6,12 @@ import {
 	IsString,
 	ValidateNested
 } from 'class-validator'
+import {Transform} from "class-transformer";
 
 export class CreateWordInput {
 	@IsNotEmpty()
 	@IsString()
+	@Transform(({value}) => value.toLowerCase())
 	readonly name: string
 
 	@ValidateNested()

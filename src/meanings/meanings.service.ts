@@ -225,6 +225,36 @@ export class MeaningsService {
 		}
 	}
 
+	public async deleteMany(meaningIds: string[], user: User) {
+		try {
+			const meanings = await this.prisma.meanings.findMany({
+				where: {
+					id: {
+						in: meaningIds
+					}
+				}
+			})
+
+			await Promise.all(
+				meanings.map(async (meaning) => {
+					await this.prisma.meanings.delete({
+						where: {
+							id: meaning.id,
+							creatorId: user.role === UserRole.ADMIN ? undefined : user.id
+						}
+					})
+					if (meaning?.image?.key) {
+						await this.cloudinary.delete(meaning.image.key)
+					}
+
+					await this.clearCachedMeanings()
+				})
+			)
+		} catch (err) {
+			throw generateErrorResponse(err)
+		}
+	}
+
 	private async clearCachedMeanings() {
 		const keys: string[] = await this.cache.store.keys()
 		const cachedMeaningsKeys = keys.filter((key) => key.startsWith('meanings'))

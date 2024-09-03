@@ -17,7 +17,7 @@ export enum SortBy {
 }
 
 export class FindManyWordsInput {
-	@Transform(({value}) => value && parseInt(value))
+	@Transform(({ value }) => value && parseInt(value))
 	@IsOptional()
 	@IsNumber()
 	@IsPositive()

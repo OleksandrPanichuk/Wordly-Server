@@ -2,6 +2,7 @@ import { AdminGuard, CurrentUser, SubscribedGuard } from '@/common'
 import {
 	Body,
 	Controller,
+	Delete,
 	Get,
 	Param,
 	Post,
@@ -9,6 +10,7 @@ import {
 	UseGuards,
 	ValidationPipe
 } from '@nestjs/common'
+import { User } from '@prisma/client'
 import { CreateWordInput, FindManyWordsInput, FindWordByNameInput } from './dto'
 import { WordsService } from './words.service'
 
@@ -35,7 +37,9 @@ export class WordsController {
 	findById() {}
 
 	@Get('/name/:name')
-	findByName(@Param() dto: FindWordByNameInput) {}
+	findByName(@Param() dto: FindWordByNameInput) {
+		return this.wordsService.findByName(dto)
+	}
 
 	@UseGuards(SubscribedGuard)
 	@Post()
@@ -47,5 +51,17 @@ export class WordsController {
 	@Post('/admin')
 	createWordAdmin(@Body() dto: CreateWordInput) {
 		return this.wordsService.create(dto)
+	}
+
+	@UseGuards(SubscribedGuard)
+	@Delete('/:wordId')
+	deleteWord(@Param('wordId') wordId: string, @CurrentUser() user: User) {
+		return this.wordsService.delete(wordId, user)
+	}
+
+	@UseGuards(AdminGuard)
+	@Delete('/admin/:wordId')
+	deleteWordAdmin(@Param('wordId') wordId: string, @CurrentUser() user: User) {
+		return this.wordsService.delete(wordId, user)
 	}
 }

@@ -1,12 +1,16 @@
 import { generateErrorResponse } from '@/common'
 import { MeaningsService } from '@/meanings/meanings.service'
 import { PrismaService } from '@app/prisma'
+import { CACHE_MANAGER } from '@nestjs/cache-manager'
 import {
 	ConflictException,
+	ForbiddenException,
+	Inject,
 	Injectable,
 	NotFoundException
 } from '@nestjs/common'
-import { Prisma } from '@prisma/client'
+import { Prisma, User, UserRole, Word } from '@prisma/client'
+import { Cache } from 'cache-manager'
 import {
 	CreateWordInput,
 	FindManyWordsInput,
@@ -19,7 +23,8 @@ import {
 export class WordsService {
 	constructor(
 		private readonly prisma: PrismaService,
-		private readonly meaningsService: MeaningsService
+		private readonly meaningsService: MeaningsService,
+		@Inject(CACHE_MANAGER) private readonly cache: Cache
 	) {}
 
 	public async findMany(
@@ -69,7 +74,7 @@ export class WordsService {
 							id: cursor
 						}
 					: undefined,
-				take: cursor ? limit + 1 : limit,
+				take: limit + 1,
 				orderBy,
 				include: {
 					_count: {
@@ -103,6 +108,12 @@ export class WordsService {
 
 	public async findByName({ name }: FindWordByNameInput) {
 		try {
+			const cachedWord = await this.cache.get<Word>(`word-by-name:${name}`)
+
+			if (cachedWord) {
+				return cachedWord
+			}
+
 			const word = await this.prisma.word.findFirst({
 				where: {
 					name: {
@@ -111,9 +122,13 @@ export class WordsService {
 					}
 				}
 			})
+
 			if (!word) {
 				throw new NotFoundException()
 			}
+
+			await this.cache.set(`word-by-name:${name}`, word)
+
 			return word
 		} catch (err) {
 			throw generateErrorResponse(err)
@@ -152,6 +167,45 @@ export class WordsService {
 					userId
 				)
 			}
+
+			return word
+		} catch (err) {
+			throw generateErrorResponse(err)
+		}
+	}
+
+	public async delete(wordId: string, user: User) {
+		try {
+			const word = await this.prisma.word.findFirst({
+				where: {
+					id: wordId
+				},
+				include: {
+					meanings: true
+				}
+			})
+
+			if (!word) {
+				throw new NotFoundException('Word not found')
+			}
+
+			if (user.role !== UserRole.ADMIN && word.creatorId !== user.id) {
+				throw new ForbiddenException('You cannot delete this word')
+			}
+
+			await this.meaningsService.deleteMany(
+				word.meanings.map((m) => m.id),
+				user
+			)
+
+			await this.prisma.word.delete({
+				where: {
+					id: wordId
+				}
+			})
+
+			await this.cache.del(`word-by-name:${word.name}`)
+			await this.cache.del(`word-by-id:${word.id}`)
 
 			return word
 		} catch (err) {
