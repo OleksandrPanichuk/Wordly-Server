@@ -1,3 +1,5 @@
 export * from './create-word.dto'
 export * from './find-many-words.dto'
 export * from './find-word-by-name.dto'
+export * from './find-word-by-id.dto'
+export * from './update-word.dto'

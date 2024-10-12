@@ -23,7 +23,7 @@ import {
 
 type CountryCode = NewCheckout['checkoutData']['billingAddress']['country']
 
-const APPROXIMATELY_3_MONTHS_IN_ML = 6_912_000_000
+const APPROXIMATELY_3_MONTHS_IN_MS = 6_912_000_000
 
 @Injectable()
 export class SubscriptionService {
@@ -164,7 +164,7 @@ export class SubscriptionService {
 			endsAtMiliSec &&
 			endsAtMiliSec > subscription.endsAt.getTime() &&
 			endsAtMiliSec - subscription.endsAt.getTime() >=
-				APPROXIMATELY_3_MONTHS_IN_ML
+			APPROXIMATELY_3_MONTHS_IN_MS
 		) {
 			await this.prisma.subscription.update({
 				where: {

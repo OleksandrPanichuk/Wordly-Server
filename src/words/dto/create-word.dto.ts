@@ -1,17 +1,17 @@
 import { Transcription } from '@/common'
 import { CreateWordMeaningInput } from '@/meanings/dto'
+import { Transform } from 'class-transformer'
 import {
 	IsNotEmpty,
 	IsOptional,
 	IsString,
 	ValidateNested
 } from 'class-validator'
-import {Transform} from "class-transformer";
 
 export class CreateWordInput {
 	@IsNotEmpty()
 	@IsString()
-	@Transform(({value}) => value.toLowerCase())
+	@Transform(({ value }) => value.toLowerCase())
 	readonly name: string
 
 	@ValidateNested()

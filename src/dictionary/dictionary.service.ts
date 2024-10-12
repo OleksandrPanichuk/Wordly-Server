@@ -1,32 +1,27 @@
-import { DICTIONARY_API_URL } from '@/common'
 import { PrismaService } from '@app/prisma'
-import { HttpService } from '@nestjs/axios'
+import { WordsDictionaryService } from '@app/words-dictionary'
 import { Injectable, NotFoundException } from '@nestjs/common'
-import { PartOfSpeech } from '@prisma/client'
-import { firstValueFrom } from 'rxjs'
+import { PartOfSpeech, Prisma, UserRole } from '@prisma/client'
 import { v4 as uuid } from 'uuid'
 import {
 	GetWordByNameInput,
 	GetWordByNameResponse,
-	SearchWordsInput
+	SearchInput
 } from './dictionary.dto'
-import {
-	TypeDictionaryNotFound,
-	TypeDictionaryWord,
-	TypeSearchDictionaryWord
-} from './dictionary.types'
+import { TypeSearchDictionaryWord } from './dictionary.types'
 
 @Injectable()
 export class DictionaryService {
 	constructor(
 		private readonly prisma: PrismaService,
-		private readonly httpService: HttpService
+		private readonly wordsDictionary: WordsDictionaryService
 	) {}
 
-	public async searchWords(input: SearchWordsInput) {
+	// TODO: also search for expressions that contain this query
+	public async search(input: SearchInput) {
 		const { q, cursor, take } = input
 
-		const wordFromDictionary = await this.fetchWordFromDictionary(q)
+		const wordFromDictionary = await this.wordsDictionary.fetch(q)
 
 		const limit = take ?? (Array.isArray(wordFromDictionary) ? 39 : 40)
 
@@ -94,47 +89,17 @@ export class DictionaryService {
 	}
 
 	public async getWordByName({
-		mode = 'DICTIONARY',
 		word
 	}: GetWordByNameInput): Promise<GetWordByNameResponse> {
-		if (mode === 'DICTIONARY') {
-			const wordFromDictionary = await this.fetchWordFromDictionary(word)
-
-			if (!wordFromDictionary) {
-				throw new NotFoundException('Word not found')
-			}
-
-			if (!('title' in wordFromDictionary)) {
-				const { partsOfSpeech, examples, meanings } =
-					this.extractMeaningsFromDictionary(wordFromDictionary[0])
-
-				return {
-					id: uuid(),
-					name: wordFromDictionary[0].word,
-					partsOfSpeech,
-					type: 'DICTIONARY',
-					examples,
-					meanings: Object.entries(meanings).map(([key, value]) => ({
-						definitions: value,
-						partOfSpeech: key as PartOfSpeech
-					})),
-					phonetics: this.extractPhoneticsFromDictionary(wordFromDictionary[0])
-				} as GetWordByNameResponse
-			} else {
-				throw new NotFoundException('Word not found')
-			}
-		}
-
 		const wordFromDB = await this.fetchWordFromDB(word)
 
 		if (!wordFromDB) {
-			throw new NotFoundException('Word not found')
+			return await this.fetchWordFromDictionaryAndCreate(word)
 		}
 
 		const meanings: Partial<
 			Record<PartOfSpeech, GetWordByNameResponse['meanings'][0]['definitions']>
 		> = {}
-
 		const examples: string[] = []
 
 		for (const meaning of wordFromDB.meanings) {
@@ -146,7 +111,6 @@ export class DictionaryService {
 				delete meaning.partOfSpeech
 				meanings[partOfSpeech] = [meaning]
 			}
-
 			if (meaning?.examples?.length) examples.push(...meaning.examples)
 		}
 
@@ -154,7 +118,6 @@ export class DictionaryService {
 			id: wordFromDB.id,
 			name: wordFromDB.name,
 			examples,
-			type: 'USER',
 			partsOfSpeech: wordFromDB.partsOfSpeech,
 			phonetics: wordFromDB.transcription,
 			meanings: Object.entries(meanings).map(([key, value]) => ({
@@ -164,26 +127,76 @@ export class DictionaryService {
 		}
 	}
 
-	private async fetchWordFromDictionary(
+	private async fetchWordFromDictionaryAndCreate(
 		word: string
-	): Promise<TypeDictionaryWord[] | TypeDictionaryNotFound | null> {
-		try {
-			const { data } = await firstValueFrom(
-				this.httpService.get<TypeDictionaryWord[] | TypeDictionaryNotFound>(
-					DICTIONARY_API_URL + word
-				)
-			)
+	): Promise<GetWordByNameResponse> {
+		const wordFromDictionary = await this.wordsDictionary.fetch(word)
 
-			return data
-		} catch {
-			return null
+		if (!wordFromDictionary || 'title' in wordFromDictionary) {
+			throw new NotFoundException('Word not found')
+		}
+
+		const admin = await this.prisma.user.findFirst({
+			where: {
+				role: UserRole.ADMIN
+			}
+		})!
+
+		const { partsOfSpeech, examples, meanings } =
+			this.wordsDictionary.extractMeanings(wordFromDictionary[0])
+		const transcription = this.wordsDictionary.extractPhonetics(
+			wordFromDictionary[0]
+		)
+
+		await this.prisma.word.create({
+			data: {
+				name: word.toLowerCase(),
+				transcription: {
+					en: transcription.general
+				},
+				creatorId: admin.id,
+				partsOfSpeech,
+				meanings: {
+					createMany: {
+						data: Object.entries(meanings)
+							.map(([key, value]) =>
+								value.map(
+									(el) =>
+										({
+											definition: el.definition,
+											partOfSpeech: key as PartOfSpeech,
+											examples: el.examples,
+											image: el.image,
+											creatorId: admin.id
+										}) as Prisma.MeaningsCreateManyWordInput
+								)
+							)
+							.flat()
+					}
+				}
+			}
+		})
+
+		return {
+			id: uuid(),
+			name: wordFromDictionary[0].word,
+			partsOfSpeech,
+			examples,
+			meanings: Object.entries(meanings).map(([key, value]) => ({
+				definitions: value,
+				partOfSpeech: key as PartOfSpeech
+			})),
+			phonetics: transcription
 		}
 	}
 
 	private async fetchWordFromDB(word: string) {
 		return await this.prisma.word.findFirst({
 			where: {
-				name: word
+				name: {
+					equals: word,
+					mode: 'insensitive'
+				}
 			},
 			include: {
 				meanings: {
@@ -201,112 +214,5 @@ export class DictionaryService {
 				}
 			}
 		})
-	}
-
-	private extractMeaningsFromDictionary(
-		wordFromDictionary: TypeDictionaryWord
-	): {
-		partsOfSpeech: PartOfSpeech[]
-		examples: string[]
-		meanings: Partial<
-			Record<PartOfSpeech, GetWordByNameResponse['meanings'][0]['definitions']>
-		>
-	} {
-		const partsOfSpeech: PartOfSpeech[] = []
-		const examples: string[] = []
-		const meanings: Partial<
-			Record<PartOfSpeech, GetWordByNameResponse['meanings'][0]['definitions']>
-		> = {}
-
-		for (const meaning of wordFromDictionary.meanings) {
-			const partOfSpeech = meaning.partOfSpeech.toUpperCase() as PartOfSpeech
-			if (!partsOfSpeech.includes(partOfSpeech)) {
-				partsOfSpeech.push(partOfSpeech)
-			}
-
-			for (const item of meaning.definitions) {
-				const extractedExamples = this.extractExamplesFromDictionary(
-					item?.example ?? '',
-					wordFromDictionary.word
-				)
-				if (meanings[partOfSpeech]?.length) {
-					meanings[partOfSpeech].push({
-						definition: item.definition,
-						id: uuid(),
-						...(!!item.example && { examples: extractedExamples })
-					})
-				} else {
-					meanings[partOfSpeech] = [
-						{
-							definition: item.definition,
-							id: uuid(),
-							...(!!item.example && { examples: extractedExamples })
-						}
-					]
-				}
-
-				if (item.example) {
-					examples.push(...extractedExamples)
-				}
-			}
-		}
-
-		return { partsOfSpeech, examples, meanings }
-	}
-
-	private extractExamplesFromDictionary(
-		example: string,
-		word: string
-	): string[] {
-		const result: string[] = []
-
-		const regex = new RegExp(`^${word}(s|ed)?(?![a-zA-Z])`, 'i')
-
-		const sentences = this.extractSentences(example)
-
-		for (const sentence of sentences) {
-			const words = this.splitSentence(sentence)
-
-			if (words.length < 5) continue
-
-			for (const el of words) {
-				const isSearchedWord = regex.test(el)
-
-				if (isSearchedWord) {
-					result.push(sentence)
-					break
-				}
-			}
-		}
-
-		return result
-	}
-
-	private extractSentences(text: string): string[] {
-		const sentencePattern = /[^.!?]*[.!?]/g
-		const sentences = text.match(sentencePattern)
-		return sentences ? sentences.map((sentence) => sentence.trim()) : []
-	}
-	private splitSentence(sentence: string): string[] {
-		const wordPattern = /[\w\u0400-\u04FF]+|[.,!?]/g
-		const words = sentence.match(wordPattern)
-		return words ? words : []
-	}
-
-	private extractPhoneticsFromDictionary(
-		wordFromDictionary: TypeDictionaryWord
-	): {
-		audio?: string
-		general?: string
-	} {
-		const audio =
-			wordFromDictionary.phonetics.find((el) => !!el.audio && !!el.text)
-				?.audio || wordFromDictionary.phonetics.find((el) => !!el.audio)?.audio
-		const general =
-			wordFromDictionary.phonetic ||
-			wordFromDictionary.phonetics.find((el) => !!el.audio && !!el.text)
-				?.text ||
-			wordFromDictionary.phonetics.find((el) => !!el.text)?.text
-		return { audio, general }
 	}
 }

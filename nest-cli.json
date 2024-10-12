@@ -37,6 +37,15 @@
       "compilerOptions": {
         "tsConfigPath": "libs/cloudinary/tsconfig.lib.json"
       }
+    },
+    "words-dictionary": {
+      "type": "library",
+      "root": "libs/words-dictionary",
+      "entryFile": "index",
+      "sourceRoot": "libs/words-dictionary/src",
+      "compilerOptions": {
+        "tsConfigPath": "libs/words-dictionary/tsconfig.lib.json"
+      }
     }
   }
 }

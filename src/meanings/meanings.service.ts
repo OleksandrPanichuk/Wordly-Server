@@ -208,16 +208,35 @@ export class MeaningsService {
 
 	public async delete(meaningId: string, userId?: string) {
 		try {
-			const meaning = await this.prisma.meanings.delete({
+			const meaning = await this.prisma.meanings.findUnique({
 				where: {
 					id: meaningId,
 					creatorId: userId
 				}
 			})
 
-			await this.cloudinary.delete(meaning.image.key)
+			if (!meaning) {
+				throw new NotFoundException('Meaning not found')
+			}
+
+			await this.prisma.meanings.delete({
+				where: {
+					id: meaningId,
+					creatorId: userId
+				}
+			})
+
+			if (meaning?.image?.key) {
+				await this.cloudinary.delete(meaning.image.key)
+			}
 
 			await this.clearCachedMeanings()
+
+			await this.revalidatePartsOfSpeech(
+				meaning.wordId,
+				meaning.partOfSpeech,
+				meaning.type
+			)
 
 			return 'Deleted successfully'
 		} catch (err) {
@@ -248,6 +267,12 @@ export class MeaningsService {
 					}
 
 					await this.clearCachedMeanings()
+
+					await this.revalidatePartsOfSpeech(
+						meaning.wordId,
+						meaning.partOfSpeech,
+						meaning.type
+					)
 				})
 			)
 		} catch (err) {
@@ -315,6 +340,66 @@ export class MeaningsService {
 					}
 				})
 				break
+			}
+			default: {
+				throw new Error('Invalid type')
+			}
+		}
+	}
+
+	private async revalidatePartsOfSpeech(
+		id: string,
+		partOfSpeech: PartOfSpeech,
+		type: LearnType
+	) {
+		const allMeanings = await this.prisma.meanings.findMany({
+			where: {
+				type,
+				...(type === LearnType.VOCABULARY
+					? { wordId: id }
+					: { expressionId: id })
+			}
+		})
+
+		const partsOfSpeech = Array.from(
+			new Set(allMeanings.map((meaning) => meaning.partOfSpeech))
+		)
+
+		if (partsOfSpeech.includes(partOfSpeech)) {
+			return
+		}
+
+		switch (type) {
+			case LearnType.VOCABULARY: {
+				const word = await this.prisma.word.update({
+					where: {
+						id
+					},
+					data: {
+						partsOfSpeech
+					}
+				})
+
+				await this.cache.del('word-by-id:' + id)
+				await this.cache.del('word-by-name:' + word.name)
+
+				break
+			}
+			case LearnType.EXPRESSIONS: {
+				await this.prisma.expression.update({
+					where: {
+						id
+					},
+					data: {
+						partsOfSpeech
+					}
+				})
+
+				// TODO: delete cached expressions
+				break
+			}
+			default: {
+				throw new Error('Invalid type')
 			}
 		}
 	}

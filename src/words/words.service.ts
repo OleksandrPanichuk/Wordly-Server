@@ -1,6 +1,7 @@
 import { generateErrorResponse } from '@/common'
 import { MeaningsService } from '@/meanings/meanings.service'
 import { PrismaService } from '@app/prisma'
+import { WordsDictionaryService } from '@app/words-dictionary'
 import { CACHE_MANAGER } from '@nestjs/cache-manager'
 import {
 	ConflictException,
@@ -9,14 +10,16 @@ import {
 	Injectable,
 	NotFoundException
 } from '@nestjs/common'
-import { Prisma, User, UserRole, Word } from '@prisma/client'
+import { PartOfSpeech, Prisma, User, UserRole, Word } from '@prisma/client'
 import { Cache } from 'cache-manager'
 import {
 	CreateWordInput,
 	FindManyWordsInput,
 	FindManyWordsResponse,
+	FindWordByIdInput,
 	FindWordByNameInput,
-	SortBy
+	SortBy,
+	UpdateWordInput
 } from './dto'
 
 @Injectable()
@@ -24,6 +27,7 @@ export class WordsService {
 	constructor(
 		private readonly prisma: PrismaService,
 		private readonly meaningsService: MeaningsService,
+		private readonly wordsDictionary: WordsDictionaryService,
 		@Inject(CACHE_MANAGER) private readonly cache: Cache
 	) {}
 
@@ -124,7 +128,7 @@ export class WordsService {
 			})
 
 			if (!word) {
-				throw new NotFoundException()
+				throw new NotFoundException(`Word ${name} is not found`)
 			}
 
 			await this.cache.set(`word-by-name:${name}`, word)
@@ -135,12 +139,41 @@ export class WordsService {
 		}
 	}
 
-	public async create({ meaning, ...dto }: CreateWordInput, userId?: string) {
+	public async findById({ id }: FindWordByIdInput) {
+		try {
+			const cachedWord = await this.cache.get<Word>(`word-by-id:${id}`)
+
+			if (cachedWord) {
+				return cachedWord
+			}
+
+			const word = await this.prisma.word.findUnique({
+				where: {
+					id
+				}
+			})
+
+			if (!word) {
+				throw new NotFoundException('Word not found')
+			}
+
+			await this.cache.set(`word-by-id:${id}`, word)
+
+			return word
+		} catch (err) {
+			throw generateErrorResponse(err)
+		}
+	}
+
+	public async create(
+		{ meaning, name, ...dto }: CreateWordInput,
+		userId?: string
+	) {
 		try {
 			const existingWord = await this.prisma.word.findFirst({
 				where: {
 					name: {
-						equals: dto.name,
+						equals: name,
 						mode: 'insensitive'
 					}
 				}
@@ -150,23 +183,98 @@ export class WordsService {
 				throw new ConflictException('Word with this name already exists')
 			}
 
-			const word = await this.prisma.word.create({
-				data: {
-					...dto,
-					creatorId: userId,
-					partsOfSpeech: []
-				}
-			})
+			const wordFromDictionary = await this.wordsDictionary.fetch(name)
+
+			let word: Word
+
+			if (!wordFromDictionary || 'title' in wordFromDictionary) {
+				word = await this.prisma.word.create({
+					data: {
+						...dto,
+						name: name.toLowerCase(),
+						creatorId: userId,
+						partsOfSpeech: []
+					}
+				})
+			} else {
+				const { partsOfSpeech, meanings } =
+					this.wordsDictionary.extractMeanings(wordFromDictionary[0])
+				const transcription = this.wordsDictionary.extractPhonetics(
+					wordFromDictionary[0]
+				)
+
+				word = await this.prisma.word.create({
+					data: {
+						name,
+						transcription: {
+							en: dto.transcription.en || transcription.general,
+							us: dto.transcription.us
+						},
+						partsOfSpeech,
+						creatorId: userId,
+						meanings: {
+							createMany: {
+								data: Object.entries(meanings)
+									.map(([key, value]) =>
+										value.map(
+											(el) =>
+												({
+													definition: el.definition,
+													partOfSpeech: key as PartOfSpeech,
+													examples: el.examples,
+													image: el.image,
+													creatorId: userId
+												}) as Prisma.MeaningsCreateManyWordInput
+										)
+									)
+									.flat()
+							}
+						}
+					}
+				})
+			}
 
 			if (meaning) {
 				await this.meaningsService.createWordMeaning(
 					{
 						...meaning,
-						wordId: word.id
+						wordId: word.id,
+
 					},
 					userId
 				)
 			}
+
+			return word
+		} catch (err) {
+			throw generateErrorResponse(err)
+		}
+	}
+
+	public async update(wordId: string, input: UpdateWordInput) {
+		try {
+			const existingWord = await this.prisma.word.findUnique({
+				where: {
+					id: wordId
+				}
+			})
+
+			if (!existingWord) {
+				throw new NotFoundException('Word not found')
+			}
+
+			const word = await this.prisma.word.update({
+				where: {
+					id: wordId
+				},
+				data: {
+					...input,
+					name: input.name?.toLowerCase()
+				}
+			})
+
+			await this.cache.del(`word-by-id:${wordId}`)
+			await this.cache.del(`word-by-name:${existingWord.name}`)
 
 			return word
 		} catch (err) {

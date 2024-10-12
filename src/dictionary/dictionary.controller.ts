@@ -8,7 +8,7 @@ import {
 	Query,
 	UseInterceptors
 } from '@nestjs/common'
-import { GetWordByNameInput, SearchWordsInput } from './dictionary.dto'
+import { GetWordByNameInput, SearchInput } from './dictionary.dto'
 import { DictionaryService } from './dictionary.service'
 
 @UseInterceptors(CacheInterceptor)
@@ -19,16 +19,16 @@ export class DictionaryController {
 
 	@Get('')
 	@HttpCode(HttpStatus.OK)
-	searchWords(@Query() query: SearchWordsInput) {
-		return this.dictionaryService.searchWords(query)
+	search(@Query() query: SearchInput) {
+		return this.dictionaryService.search(query)
 	}
 
 	@Get('/:word')
 	@HttpCode(HttpStatus.OK)
 	getWordByName(
-		@Param('word') word: string,
-		@Query('mode') mode: GetWordByNameInput['mode'] = 'DICTIONARY'
+		@Param('') dto: GetWordByNameInput,
+		
 	) {
-		return this.dictionaryService.getWordByName({ mode, word })
+		return this.dictionaryService.getWordByName(dto)
 	}
 }

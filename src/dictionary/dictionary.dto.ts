@@ -1,22 +1,24 @@
 import { PartOfSpeech } from '@prisma/client'
 import { Transform } from 'class-transformer'
-import { IsEnum, IsMongoId, IsNotEmpty, IsNumber, IsOptional, IsPositive, IsString } from 'class-validator'
+import {
+	IsMongoId,
+	IsNotEmpty,
+	IsNumber,
+	IsOptional,
+	IsPositive,
+	IsString
+} from 'class-validator'
 
-
-
-export class SearchWordsInput {
-
+export class SearchInput {
 	@IsString()
 	@IsNotEmpty()
-	readonly q:string
-
+	readonly q: string
 
 	@IsOptional()
-	@Transform(({value}) => value && parseInt(value))
+	@Transform(({ value }) => value && parseInt(value))
 	@IsNumber()
 	@IsPositive()
-	readonly take?: number 
-
+	readonly take?: number
 
 	@IsOptional()
 	@IsMongoId()
@@ -24,10 +26,6 @@ export class SearchWordsInput {
 }
 
 export class GetWordByNameInput {
-	@IsOptional()
-	@IsEnum(['USER', 'DICTIONARY'])
-	readonly mode?: 'USER' | 'DICTIONARY'
-
 	@IsString()
 	@IsNotEmpty()
 	readonly word: string
@@ -35,7 +33,6 @@ export class GetWordByNameInput {
 
 export type GetWordByNameResponse = {
 	id: string
-	type: 'DICTIONARY' | 'USER'
 	name: string
 	examples?: string[]
 	partsOfSpeech: PartOfSpeech[]

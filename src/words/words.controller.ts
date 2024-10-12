@@ -5,13 +5,20 @@ import {
 	Delete,
 	Get,
 	Param,
+	Patch,
 	Post,
 	Query,
 	UseGuards,
 	ValidationPipe
 } from '@nestjs/common'
 import { User } from '@prisma/client'
-import { CreateWordInput, FindManyWordsInput, FindWordByNameInput } from './dto'
+import {
+	CreateWordInput,
+	FindManyWordsInput,
+	FindWordByIdInput,
+	FindWordByNameInput,
+	UpdateWordInput
+} from './dto'
 import { WordsService } from './words.service'
 
 @Controller('words')
@@ -34,7 +41,9 @@ export class WordsController {
 	}
 
 	@Get(':id')
-	findById() {}
+	findById(@Param() dto: FindWordByIdInput) {
+		return this.wordsService.findById(dto)
+	}
 
 	@Get('/name/:name')
 	findByName(@Param() dto: FindWordByNameInput) {
@@ -51,6 +60,24 @@ export class WordsController {
 	@Post('/admin')
 	createWordAdmin(@Body() dto: CreateWordInput) {
 		return this.wordsService.create(dto)
+	}
+
+	@UseGuards(SubscribedGuard)
+	@Patch('/:wordId')
+	updateWord(
+		@Param('wordId') wordId: string,
+		@Body() dto: UpdateWordInput,
+	) {
+		return this.wordsService.update(wordId, dto)
+	}
+
+	@UseGuards(AdminGuard)
+	@Patch('/admin/:wordId')
+	updateWordAdmin(
+		@Param('wordId') wordId: string,
+		@Body() dto: UpdateWordInput,
+	) {
+		return this.wordsService.update(wordId, dto)
 	}
 
 	@UseGuards(SubscribedGuard)
